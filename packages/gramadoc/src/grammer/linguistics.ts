@@ -185,9 +185,11 @@ const VERBS = new Set([
   'affect',
   'agree',
   'analyze',
+  'approve',
   'arrive',
   'begin',
   'build',
+  'care',
   'change',
   'check',
   'clarify',
@@ -198,15 +200,19 @@ const VERBS = new Set([
   'effect',
   'explain',
   'finish',
+  'fix',
   'go',
   'help',
   'improve',
   'involve',
   'join',
   'keep',
+  'know',
   'launch',
   'leave',
+  'listen',
   'live',
+  'make',
   'miss',
   'need',
   'note',
@@ -218,12 +224,14 @@ const VERBS = new Set([
   'practise',
   'publish',
   'read',
+  'remind',
   'return',
   'round',
   'run',
   'scale',
   'seem',
   'ship',
+  'stand',
   'support',
   'try',
   'use',
@@ -232,6 +240,68 @@ const VERBS = new Set([
   'wrap',
   'write',
 ])
+const CONTRACTION_ANNOTATIONS: Record<
+  string,
+  {
+    lemma: string
+    hints: TokenPosHint[]
+  }
+> = {
+  "aren't": { lemma: 'be', hints: ['auxiliary', 'verb'] },
+  "can't": { lemma: 'can', hints: ['modal', 'verb'] },
+  "could've": { lemma: 'could', hints: ['modal', 'verb'] },
+  "couldn't": { lemma: 'could', hints: ['modal', 'verb'] },
+  "didn't": { lemma: 'do', hints: ['auxiliary', 'verb'] },
+  "doesn't": { lemma: 'do', hints: ['auxiliary', 'verb'] },
+  "don't": { lemma: 'do', hints: ['auxiliary', 'verb'] },
+  "hasn't": { lemma: 'have', hints: ['auxiliary', 'verb'] },
+  "haven't": { lemma: 'have', hints: ['auxiliary', 'verb'] },
+  "hadn't": { lemma: 'have', hints: ['auxiliary', 'verb'] },
+  "he's": { lemma: 'be', hints: ['auxiliary', 'verb'] },
+  "he'll": { lemma: 'will', hints: ['modal', 'verb'] },
+  "how's": { lemma: 'be', hints: ['auxiliary', 'verb'] },
+  "i'm": { lemma: 'be', hints: ['auxiliary', 'verb'] },
+  "i'll": { lemma: 'will', hints: ['modal', 'verb'] },
+  "i've": { lemma: 'have', hints: ['auxiliary', 'verb'] },
+  "isn't": { lemma: 'be', hints: ['auxiliary', 'verb'] },
+  "it'll": { lemma: 'will', hints: ['modal', 'verb'] },
+  "it's": { lemma: 'be', hints: ['auxiliary', 'verb'] },
+  "let's": { lemma: 'let', hints: ['verb'] },
+  "might've": { lemma: 'might', hints: ['modal', 'verb'] },
+  "mightn't": { lemma: 'might', hints: ['modal', 'verb'] },
+  "must've": { lemma: 'must', hints: ['modal', 'verb'] },
+  "mustn't": { lemma: 'must', hints: ['modal', 'verb'] },
+  "needn't": { lemma: 'need', hints: ['modal', 'verb'] },
+  "shan't": { lemma: 'shall', hints: ['modal', 'verb'] },
+  "she's": { lemma: 'be', hints: ['auxiliary', 'verb'] },
+  "she'll": { lemma: 'will', hints: ['modal', 'verb'] },
+  "should've": { lemma: 'should', hints: ['modal', 'verb'] },
+  "shouldn't": { lemma: 'should', hints: ['modal', 'verb'] },
+  "that's": { lemma: 'be', hints: ['auxiliary', 'verb'] },
+  "that'll": { lemma: 'will', hints: ['modal', 'verb'] },
+  "there's": { lemma: 'be', hints: ['auxiliary', 'verb'] },
+  "there'll": { lemma: 'will', hints: ['modal', 'verb'] },
+  "they'll": { lemma: 'will', hints: ['modal', 'verb'] },
+  "they're": { lemma: 'be', hints: ['auxiliary', 'verb'] },
+  "they've": { lemma: 'have', hints: ['auxiliary', 'verb'] },
+  "wasn't": { lemma: 'be', hints: ['auxiliary', 'verb'] },
+  "we'll": { lemma: 'will', hints: ['modal', 'verb'] },
+  "we're": { lemma: 'be', hints: ['auxiliary', 'verb'] },
+  "we've": { lemma: 'have', hints: ['auxiliary', 'verb'] },
+  "weren't": { lemma: 'be', hints: ['auxiliary', 'verb'] },
+  "when's": { lemma: 'be', hints: ['auxiliary', 'verb'] },
+  "what's": { lemma: 'be', hints: ['auxiliary', 'verb'] },
+  "where's": { lemma: 'be', hints: ['auxiliary', 'verb'] },
+  "who'll": { lemma: 'will', hints: ['modal', 'verb'] },
+  "who's": { lemma: 'be', hints: ['auxiliary', 'verb'] },
+  "why's": { lemma: 'be', hints: ['auxiliary', 'verb'] },
+  "won't": { lemma: 'will', hints: ['modal', 'verb'] },
+  "would've": { lemma: 'would', hints: ['modal', 'verb'] },
+  "wouldn't": { lemma: 'would', hints: ['modal', 'verb'] },
+  "you'll": { lemma: 'will', hints: ['modal', 'verb'] },
+  "you're": { lemma: 'be', hints: ['auxiliary', 'verb'] },
+  "you've": { lemma: 'have', hints: ['auxiliary', 'verb'] },
+}
 const IRREGULAR_LEMMAS: Record<string, string> = {
   am: 'be',
   are: 'be',
@@ -276,6 +346,13 @@ const SINGULAR_PRONOUNS = new Set([
   'this',
 ])
 const SINGULAR_NOUN_EXCEPTIONS = new Set(['analysis', 'news'])
+const S_FORM_MORPHOLOGY_BLOCKLIST = new Set([
+  'analysis',
+  'news',
+  'series',
+  'species',
+  'status',
+])
 const OPEN_CLASS_HINTS = new Set<TokenPosHint>([
   'adjective',
   'adverb',
@@ -364,6 +441,34 @@ function buildPosReadings(options: {
   })
 }
 
+function isLikelyVerbDerivation(normalized: string) {
+  return (
+    /(?:ize|ise|ify)$/u.test(normalized) ||
+    (normalized.length > 5 && /ate$/u.test(normalized))
+  )
+}
+
+function isLikelyThirdPersonSingularSForm(normalized: string) {
+  if (
+    !/^[a-z]+$/u.test(normalized) ||
+    !normalized.endsWith('s') ||
+    normalized.length <= 3 ||
+    /(?:ss|us|is)$/u.test(normalized) ||
+    S_FORM_MORPHOLOGY_BLOCKLIST.has(normalized)
+  ) {
+    return false
+  }
+
+  const base =
+    normalized.endsWith('ies') && normalized.length > 4
+      ? `${normalized.slice(0, -3)}y`
+      : /(ches|shes|sses|xes|zes|oes)$/u.test(normalized)
+        ? normalized.slice(0, -2)
+        : normalized.slice(0, -1)
+
+  return VERBS.has(base) || isLikelyVerbDerivation(base)
+}
+
 function getMorphologyHints(normalized: string) {
   const hints: TokenPosHint[] = []
 
@@ -379,11 +484,20 @@ function getMorphologyHints(normalized: string) {
     hints.push('noun')
   }
 
-  if (/(ing|ed)$/u.test(normalized)) {
+  if (/(ing|ed)$/u.test(normalized) || isLikelyVerbDerivation(normalized)) {
     hints.push('verb')
   }
 
-  if (normalized.endsWith('s') && normalized.length > 3) {
+  if (isLikelyThirdPersonSingularSForm(normalized)) {
+    hints.push('verb')
+  }
+
+  if (
+    normalized.endsWith('s') &&
+    normalized.length > 3 &&
+    !/(ss|us|is)$/u.test(normalized) &&
+    !S_FORM_MORPHOLOGY_BLOCKLIST.has(normalized)
+  ) {
     hints.push('noun')
   }
 
@@ -419,6 +533,13 @@ export function getLemma(normalized: string) {
 }
 
 export function getLemmaAnnotation(normalized: string) {
+  if (CONTRACTION_ANNOTATIONS[normalized]) {
+    return {
+      lemma: CONTRACTION_ANNOTATIONS[normalized].lemma,
+      source: 'irregular' as const,
+    }
+  }
+
   if (IRREGULAR_LEMMAS[normalized]) {
     return {
       lemma: IRREGULAR_LEMMAS[normalized],
@@ -485,6 +606,13 @@ export function getTokenAnnotation(normalized: string): TokenAnnotation {
   let usedClosedClassLexicon = false
   let usedOpenClassLexicon = false
   const morphologyPosHints: TokenPosHint[] = []
+  const contractionAnnotation = CONTRACTION_ANNOTATIONS[normalized]
+
+  if (contractionAnnotation) {
+    lexicalPosHints.push(...contractionAnnotation.hints)
+    closedClassHints.push(...contractionAnnotation.hints)
+    usedClosedClassLexicon = true
+  }
 
   if (PRONOUNS.has(normalized)) {
     lexicalPosHints.push('pronoun')
@@ -548,7 +676,9 @@ export function getTokenAnnotation(normalized: string): TokenAnnotation {
   const dedupedMorphologyPosHints = dedupeHints(morphologyPosHints)
   const fallbackPosHints =
     dedupedLexicalPosHints.length === 0 &&
-    dedupedMorphologyPosHints.length === 0
+    dedupedMorphologyPosHints.length === 0 &&
+    !normalized.includes("'") &&
+    !isLikelyVerbDerivation(normalized)
       ? (['noun'] as TokenPosHint[])
       : []
   const effectivePosHints = dedupeHints([

@@ -49,6 +49,11 @@ describe('lightweight annotation lift', () => {
   it('keeps attested open-class readings separate from fallback noun guesses', () => {
     const well = getTokenAnnotation('well')
     const performs = getTokenAnnotation('performs')
+    const makes = getTokenAnnotation('makes')
+    const helps = getTokenAnnotation('helps')
+    const status = getTokenAnnotation('status')
+    const series = getTokenAnnotation('series')
+    const containerize = getTokenAnnotation('containerize')
     const frobnicator = getTokenAnnotation('frobnicator')
 
     expect(well.lexicalPosHints).toContain('adverb')
@@ -64,6 +69,19 @@ describe('lightweight annotation lift', () => {
     )
 
     expect(performs.lexicalPosHints).toContain('verb')
+    expect(performs.morphologyPosHints).toEqual(
+      expect.arrayContaining(['noun', 'verb']),
+    )
+    expect(makes.morphologyPosHints).toEqual(
+      expect.arrayContaining(['noun', 'verb']),
+    )
+    expect(helps.morphologyPosHints).toEqual(
+      expect.arrayContaining(['noun', 'verb']),
+    )
+    expect(status.morphologyPosHints).toEqual([])
+    expect(series.morphologyPosHints).toEqual([])
+    expect(containerize.morphologyPosHints).toEqual(['verb'])
+    expect(containerize.fallbackPosHints).toEqual([])
     expect(performs.morphologyPosHints).toContain('noun')
     expect(performs.fallbackPosHints).toEqual([])
     expect(performs.isPosAmbiguous).toBe(true)
@@ -77,6 +95,66 @@ describe('lightweight annotation lift', () => {
         confidence: 'low',
       },
     ])
+  })
+
+  it('recovers useful auxiliary and modal signals from common contractions', () => {
+    const cant = getTokenAnnotation("can't")
+    const dont = getTokenAnnotation("don't")
+    const wont = getTokenAnnotation("won't")
+    const im = getTokenAnnotation("i'm")
+    const were = getTokenAnnotation("we're")
+    const shouldnt = getTokenAnnotation("shouldn't")
+    const youll = getTokenAnnotation("you'll")
+    const shouldve = getTokenAnnotation("should've")
+
+    expect(cant).toMatchObject({
+      lemma: 'can',
+      lexicalPosHints: expect.arrayContaining(['modal', 'verb']),
+      fallbackPosHints: [],
+      posHintConfidence: 'high',
+    })
+    expect(dont).toMatchObject({
+      lemma: 'do',
+      lexicalPosHints: expect.arrayContaining(['auxiliary', 'verb']),
+      fallbackPosHints: [],
+      posHintConfidence: 'high',
+    })
+    expect(wont).toMatchObject({
+      lemma: 'will',
+      lexicalPosHints: expect.arrayContaining(['modal', 'verb']),
+      fallbackPosHints: [],
+      posHintConfidence: 'high',
+    })
+    expect(im).toMatchObject({
+      lemma: 'be',
+      lexicalPosHints: expect.arrayContaining(['auxiliary', 'verb']),
+      fallbackPosHints: [],
+      posHintConfidence: 'high',
+    })
+    expect(were).toMatchObject({
+      lemma: 'be',
+      lexicalPosHints: expect.arrayContaining(['auxiliary', 'verb']),
+      fallbackPosHints: [],
+      posHintConfidence: 'high',
+    })
+    expect(shouldnt).toMatchObject({
+      lemma: 'should',
+      lexicalPosHints: expect.arrayContaining(['modal', 'verb']),
+      fallbackPosHints: [],
+      posHintConfidence: 'high',
+    })
+    expect(youll).toMatchObject({
+      lemma: 'will',
+      lexicalPosHints: expect.arrayContaining(['modal', 'verb']),
+      fallbackPosHints: [],
+      posHintConfidence: 'high',
+    })
+    expect(shouldve).toMatchObject({
+      lemma: 'should',
+      lexicalPosHints: expect.arrayContaining(['modal', 'verb']),
+      fallbackPosHints: [],
+      posHintConfidence: 'high',
+    })
   })
 
   it('still improves confusion ranking on annotation-sensitive fixtures', () => {
@@ -143,5 +221,65 @@ describe('lightweight annotation lift', () => {
     expect(offline?.posHints).toContain('adjective')
     expect(frobnicator.fallbackPosHints).toEqual(['noun'])
     expect(frobnicator.posReadings[0]?.sources).toEqual(['fallback'])
+  })
+
+  it('recovers predicate signals after contracted auxiliaries and leaves unknown fallback noun-only', () => {
+    const context = buildRuleCheckContext(
+      "I can't stand delays. We don't agree. I'm ready. We're late. She won't listen. Every frobnicator glips the queue.",
+    )
+
+    const stand = context.tokens.find((token) => token.normalized === 'stand')
+    const agree = context.tokens.find((token) => token.normalized === 'agree')
+    const ready = context.tokens.find((token) => token.normalized === 'ready')
+    const late = context.tokens.find((token) => token.normalized === 'late')
+    const listen = context.tokens.find((token) => token.normalized === 'listen')
+    const glips = context.tokens.find((token) => token.normalized === 'glips')
+
+    expect(stand?.posHints).toContain('verb')
+    expect(stand?.disambiguationProvenance).toContain(
+      'auxiliary-or-modal-plus-verb',
+    )
+    expect(agree?.posHints).toContain('verb')
+    expect(agree?.disambiguationProvenance).toContain(
+      'auxiliary-or-modal-plus-verb',
+    )
+    expect(ready?.posHints).toContain('adjective')
+    expect(late?.posHints).toContain('adjective')
+    expect(listen?.posHints).toContain('verb')
+    expect(listen?.disambiguationProvenance).toContain(
+      'auxiliary-or-modal-plus-verb',
+    )
+    expect(glips?.posHints).toEqual(['noun'])
+    expect(glips?.usedFallbackPosGuess).toBe(false)
+  })
+
+  it('recovers verb signals after additional contracted modals', () => {
+    const context = buildRuleCheckContext(
+      "You'll listen. We shouldn't go. They should've gone. He might've finished.",
+    )
+
+    const listen = context.tokens.find((token) => token.normalized === 'listen')
+    const go = context.tokens.find((token) => token.normalized === 'go')
+    const gone = context.tokens.find((token) => token.normalized === 'gone')
+    const finished = context.tokens.find(
+      (token) => token.normalized === 'finished',
+    )
+
+    expect(listen?.posHints).toContain('verb')
+    expect(listen?.disambiguationProvenance).toContain(
+      'auxiliary-or-modal-plus-verb',
+    )
+    expect(go?.posHints).toContain('verb')
+    expect(go?.disambiguationProvenance).toContain(
+      'auxiliary-or-modal-plus-verb',
+    )
+    expect(gone?.posHints).toContain('verb')
+    expect(gone?.disambiguationProvenance).toContain(
+      'auxiliary-or-modal-plus-verb',
+    )
+    expect(finished?.posHints).toContain('verb')
+    expect(finished?.disambiguationProvenance).toContain(
+      'auxiliary-or-modal-plus-verb',
+    )
   })
 })

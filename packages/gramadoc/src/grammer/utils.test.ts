@@ -45,6 +45,28 @@ describe('tokenizeText', () => {
     })
   })
 
+  it('keeps common contractions as single tokens for downstream annotation', () => {
+    const context = buildRuleCheckContext(
+      "I can't go. We don't agree. I'm ready. We're late. She won't listen.",
+    )
+
+    expect(context.tokens.map((token) => token.value)).toEqual([
+      'I',
+      "can't",
+      'go',
+      'We',
+      "don't",
+      'agree',
+      "I'm",
+      'ready',
+      "We're",
+      'late',
+      'She',
+      "won't",
+      'listen',
+    ])
+  })
+
   it('preserves heading block metadata for downstream rules', () => {
     const analysis = analyzeHtml('<h1>Doccument</h1><p>Normal paragraph.</p>')
     const context = buildRuleCheckContext(analysis.plainText, {
