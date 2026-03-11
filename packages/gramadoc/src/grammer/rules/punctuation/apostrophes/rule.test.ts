@@ -181,6 +181,37 @@ describe('pluralPossessiveApostropheRule', () => {
       ),
     ).toEqual([])
   })
+
+  it('covers newly curated plural possessive phrases', () => {
+    const matches = runRule(
+      pluralPossessiveApostropheRule,
+      'The artists studio shared updates with the readers forum in the members area near the visitors center.',
+    )
+
+    expect(matches).toHaveLength(4)
+    expect(matches.map((match) => match.replacements)).toEqual([
+      [{ value: "artists' studio" }],
+      [{ value: "readers' forum" }],
+      [{ value: "members' area" }],
+      [{ value: "visitors' center" }],
+    ])
+  })
+
+  it('covers additional guide, guild, and union phrases', () => {
+    const matches = runRule(
+      pluralPossessiveApostropheRule,
+      'The users guide cites the students guide, the authors guild, the writers guild, and the teachers union.',
+    )
+
+    expect(matches).toHaveLength(5)
+    expect(matches.map((match) => match.replacements)).toEqual([
+      [{ value: "users' guide" }],
+      [{ value: "students' guide" }],
+      [{ value: "authors' guild" }],
+      [{ value: "writers' guild" }],
+      [{ value: "teachers' union" }],
+    ])
+  })
 })
 
 describe('possessivePronounApostropheRule', () => {
@@ -276,6 +307,35 @@ describe('namedPossessivePhraseRule', () => {
     expect(matches[2].replacements).toEqual([{ value: "Father's Day" }])
     expect(matches[3].replacements).toEqual([{ value: "Valentine's Day" }])
     expect(matches[4].replacements).toEqual([{ value: "Saint Patrick's Day" }])
+  })
+
+  it('covers additional holiday and observance names', () => {
+    const matches = runRule(
+      namedPossessivePhraseRule,
+      'April Fools Day, Childrens Day, Presidents Day, Womens Day, and Saint Georges Day are all on the calendar.',
+    )
+
+    expect(matches).toHaveLength(5)
+    expect(matches.map((match) => match.replacements)).toEqual([
+      [{ value: "April Fools' Day" }],
+      [{ value: "Children's Day" }],
+      [{ value: "Presidents' Day" }],
+      [{ value: "Women's Day" }],
+      [{ value: "Saint George's Day" }],
+    ])
+  })
+
+  it('covers additional established observance names', () => {
+    const matches = runRule(
+      namedPossessivePhraseRule,
+      'All Saints Day and Womens History Month both need the apostrophe.',
+    )
+
+    expect(matches).toHaveLength(2)
+    expect(matches.map((match) => match.replacements)).toEqual([
+      [{ value: "All Saints' Day" }],
+      [{ value: "Women's History Month" }],
+    ])
   })
 })
 
