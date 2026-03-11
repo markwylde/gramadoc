@@ -328,7 +328,10 @@ export function findTextRange(
   offset: number,
   length: number,
 ) {
-  if (index.characters.length === 0 || length <= 0) {
+  if (
+    index.characters.length === 0 ||
+    (length === 0 && offset > index.characters.length)
+  ) {
     return null
   }
 
@@ -343,4 +346,82 @@ export function findTextRange(
   range.setStart(start.node, start.offset)
   range.setEnd(end.node, end.offset)
   return range
+}
+
+export function getSelectionOffsets(
+  container: HTMLElement,
+  index: DomTextIndex,
+): { start: number; end: number } | null {
+  const selection = window.getSelection()
+  if (!selection || selection.rangeCount === 0) {
+    return null
+  }
+
+  const range = selection.getRangeAt(0)
+  if (
+    !container.contains(range.startContainer) ||
+    !container.contains(range.endContainer)
+  ) {
+    return null
+  }
+
+  let start = -1
+  let end = -1
+
+  for (let i = 0; i < index.characters.length; i++) {
+    const entry = index.characters[i]
+    if (!entry) {
+      continue
+    }
+
+    if (
+      start === -1 &&
+      entry.node === range.startContainer &&
+      entry.startOffset <= range.startOffset &&
+      entry.endOffset >= range.startOffset
+    ) {
+      start = i + (range.startOffset - entry.startOffset)
+    }
+
+    if (
+      end === -1 &&
+      entry.node === range.endContainer &&
+      entry.startOffset <= range.endOffset &&
+      entry.endOffset >= range.endOffset
+    ) {
+      end = i + (range.endOffset - entry.startOffset)
+    }
+  }
+
+  // Fallback for when selection is at the very end of a text node
+  if (start === -1 || end === -1) {
+    for (let i = index.characters.length - 1; i >= 0; i--) {
+      const entry = index.characters[i]
+      if (!entry) {
+        continue
+      }
+
+      if (
+        start === -1 &&
+        entry.node === range.startContainer &&
+        entry.endOffset === range.startOffset
+      ) {
+        start = i + 1
+      }
+
+      if (
+        end === -1 &&
+        entry.node === range.endContainer &&
+        entry.endOffset === range.endOffset
+      ) {
+        end = i + 1
+      }
+    }
+  }
+
+  if (start === -1 || end === -1) {
+    return null
+  }
+
+  return { start, end }
 }
