@@ -8,7 +8,11 @@ import {
   useRef,
   useState,
 } from 'react'
-import { buildDomTextIndex, findTextRange } from './plainTextIndex'
+import {
+  buildDomTextIndex,
+  findTextRange,
+  getSelectionOffsets,
+} from './plainTextIndex'
 import type {
   EditorBlockType,
   GramadocEditorHandle,
@@ -80,7 +84,7 @@ function defaultUnderlineColor(match: Match): string {
 }
 
 function getEditorHtml(editor: HTMLDivElement) {
-  const isVisuallyEmpty = editor.textContent?.trim().length === 0
+  const isVisuallyEmpty = editor.childNodes.length === 0
   return isVisuallyEmpty ? '' : normalizeEditorHtml(editor.innerHTML)
 }
 
@@ -281,11 +285,6 @@ function normalizeTopLevelContent(root: HTMLElement) {
 
   for (const child of Array.from(root.childNodes)) {
     if (child.nodeType === Node.TEXT_NODE) {
-      if (!child.textContent?.trim()) {
-        child.remove()
-        continue
-      }
-
       inlineBuffer.push(child)
       continue
     }
@@ -305,6 +304,14 @@ function normalizeTopLevelContent(root: HTMLElement) {
   }
 
   flushInlineBuffer(null)
+
+  // Ensure there's a paragraph to type in if the last element is an HR
+  const lastChild = root.lastElementChild
+  if (lastChild?.tagName.toLowerCase() === 'hr') {
+    const p = document.createElement('p')
+    p.appendChild(document.createElement('br'))
+    root.appendChild(p)
+  }
 }
 
 function normalizeEditorHtml(html: string) {
@@ -322,7 +329,7 @@ function normalizeEditorHtml(html: string) {
   normalizeTopLevelContent(root)
 
   const normalized = root.innerHTML.trim()
-  return root.textContent?.trim() ? normalized : ''
+  return root.innerHTML.trim() ? normalized : ''
 }
 
 function selectionBelongsToEditor(editor: HTMLDivElement) {
@@ -453,6 +460,9 @@ export const GramadocInput = forwardRef<
   const observerRef = useRef<MutationObserver | null>(null)
   const matchesRef = useRef(warnings.matches)
   const selectionRangeRef = useRef<Range | null>(null)
+  const selectionOffsetsRef = useRef<{ start: number; end: number } | null>(
+    null,
+  )
   const editorStateRef = useRef<GramadocEditorState>(EMPTY_EDITOR_STATE)
   const [underlines, setUnderlines] = useState<UnderlineData[]>([])
   const [hoveredMatch, setHoveredMatch] = useState<Match | null>(null)
@@ -505,15 +515,35 @@ export const GramadocInput = forwardRef<
   }, [onStateChange])
 
   const restoreSelection = useCallback(() => {
+    const editor = editorRef.current
     const selection = window.getSelection()
-    const range = selectionRangeRef.current
 
-    if (!selection || !range) {
+    if (!editor || !selection) {
       return
     }
 
-    selection.removeAllRanges()
-    selection.addRange(range)
+    const range = selectionRangeRef.current
+    const offsets = selectionOffsetsRef.current
+
+    if (offsets) {
+      const textIndex = buildDomTextIndex(editor)
+      const restoredRange = findTextRange(
+        textIndex,
+        offsets.start,
+        offsets.end - offsets.start,
+      )
+
+      if (restoredRange) {
+        selection.removeAllRanges()
+        selection.addRange(restoredRange)
+        return
+      }
+    }
+
+    if (range && editor.contains(range.startContainer)) {
+      selection.removeAllRanges()
+      selection.addRange(range)
+    }
   }, [])
 
   const captureSelection = useCallback(() => {
@@ -529,7 +559,11 @@ export const GramadocInput = forwardRef<
       return
     }
 
-    selectionRangeRef.current = selection.getRangeAt(0).cloneRange()
+    const range = selection.getRangeAt(0)
+    selectionRangeRef.current = range.cloneRange()
+
+    const textIndex = buildDomTextIndex(editor)
+    selectionOffsetsRef.current = getSelectionOffsets(editor, textIndex)
   }, [])
 
   const calculateUnderlines = useCallback(() => {
@@ -652,7 +686,9 @@ export const GramadocInput = forwardRef<
     const normalizedHtml = normalizeEditorHtml(editor.innerHTML)
 
     if (editor.innerHTML !== normalizedHtml) {
+      captureSelection()
       editor.innerHTML = normalizedHtml
+      restoreSelection()
     }
 
     captureSelection()
@@ -661,7 +697,13 @@ export const GramadocInput = forwardRef<
     window.requestAnimationFrame(() => {
       calculateUnderlines()
     })
-  }, [calculateUnderlines, captureSelection, emitChange, emitEditorState])
+  }, [
+    calculateUnderlines,
+    captureSelection,
+    emitChange,
+    emitEditorState,
+    restoreSelection,
+  ])
 
   const scheduleEditorSync = useCallback(() => {
     if (syncFrameRef.current !== null) {
@@ -689,9 +731,12 @@ export const GramadocInput = forwardRef<
         return false
       }
 
+      captureSelection()
+
       const normalizedHtml = normalizeEditorHtml(editor.innerHTML)
       if (editor.innerHTML !== normalizedHtml) {
         editor.innerHTML = normalizedHtml
+        restoreSelection()
       }
 
       editor.normalize()
@@ -707,6 +752,7 @@ export const GramadocInput = forwardRef<
     },
     [
       calculateUnderlines,
+      captureSelection,
       closePopup,
       emitChange,
       emitEditorState,
@@ -734,12 +780,28 @@ export const GramadocInput = forwardRef<
 
       range.deleteContents()
       range.insertNode(document.createTextNode(replacement))
+
       const normalizedHtml = normalizeEditorHtml(editor.innerHTML)
       if (editor.innerHTML !== normalizedHtml) {
         editor.innerHTML = normalizedHtml
       }
 
       editor.normalize()
+
+      const newIndex = buildDomTextIndex(editor)
+      const restoredRange = findTextRange(
+        newIndex,
+        activeMatch.offset + replacement.length,
+        0,
+      )
+      if (restoredRange) {
+        const selection = window.getSelection()
+        if (selection) {
+          selection.removeAllRanges()
+          selection.addRange(restoredRange)
+        }
+      }
+      editor.focus()
 
       const nextValue = getEditorHtml(editor)
       onChange?.(nextValue)
@@ -846,10 +908,11 @@ export const GramadocInput = forwardRef<
       }
 
       if (event.key === 'Enter') {
+        captureSelection()
         scheduleEditorSync()
       }
     },
-    [readOnly, runEditorCommand, scheduleEditorSync],
+    [readOnly, runEditorCommand, scheduleEditorSync, captureSelection],
   )
 
   useLayoutEffect(() => {
@@ -861,13 +924,15 @@ export const GramadocInput = forwardRef<
     const currentHtml = getEditorHtml(editor)
 
     if (currentHtml !== value) {
+      captureSelection()
       editor.innerHTML = normalizeEditorHtml(value)
+      restoreSelection()
 
-      if (autoFocus) {
+      if (autoFocus && !selectionRangeRef.current) {
         focusEditorAtEnd(editor)
       }
     }
-  }, [autoFocus, value])
+  }, [autoFocus, value, captureSelection, restoreSelection])
 
   useEffect(() => {
     const editor = editorRef.current
@@ -1218,9 +1283,10 @@ export const GramadocInput = forwardRef<
           emitEditorState()
         }}
         onInput={() => {
+          captureSelection()
           closePopup()
           setHoveredMatch(null)
-          syncEditorFromDom()
+          scheduleEditorSync()
         }}
         onKeyDown={handleKeyDown}
         onKeyUp={() => {

@@ -1878,20 +1878,6 @@ function App() {
               </svg>
               {wordCount} words
             </button>
-            <select
-              className="toolbar-select"
-              aria-label="Theme"
-              value={documentState.theme}
-              onChange={(event) => {
-                changeTheme(event.target.value as Theme)
-              }}
-            >
-              {THEME_OPTIONS.map((theme) => (
-                <option key={theme.id} value={theme.id}>
-                  {theme.label}
-                </option>
-              ))}
-            </select>
           </div>
         </div>
       </header>
