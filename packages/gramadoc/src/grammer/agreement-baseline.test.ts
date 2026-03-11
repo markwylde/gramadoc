@@ -101,7 +101,8 @@ describe('agreement baseline against LanguageTool', () => {
     const reviewedSkips = baselineFixtures
       .filter(
         (fixture) =>
-          fixture.expected === 'flag' && fixture.expectedLanguageTool === 'flag',
+          fixture.expected === 'flag' &&
+          fixture.expectedLanguageTool === 'flag',
       )
       .filter((fixture) => !hasAgreementMatch(fixture.text))
       .map((fixture) => fixture.family)

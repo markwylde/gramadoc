@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
+import { buildRuleCheckContext } from '../../../utils'
 import { runRule } from '../../testUtils'
 import { subjectVerbAgreementRule, thereIsAreAgreementRule } from './rule'
-import { buildRuleCheckContext } from '../../../utils'
 
 describe('subjectVerbAgreementRule', () => {
   it('flags simple subject-verb agreement mismatches', () => {
@@ -232,7 +232,9 @@ describe('subjectVerbAgreementRule', () => {
       "I can't stand it",
       'and every update makes it worse',
     ])
-    expect(context.tokens.map((token) => `${token.value}:${token.clausePart}`)).toEqual([
+    expect(
+      context.tokens.map((token) => `${token.value}:${token.clausePart}`),
+    ).toEqual([
       'I:subject',
       "can't:predicate",
       'stand:predicate',

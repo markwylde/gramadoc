@@ -59,7 +59,8 @@ export const pluralPossessivePatterns: PhraseReplacementPattern[] = [
   {
     phrase: 'researchers conference',
     replacement: "researchers' conference",
-    message: 'Use a plural possessive apostrophe in "researchers\' conference".',
+    message:
+      'Use a plural possessive apostrophe in "researchers\' conference".',
   },
   {
     phrase: 'students union',

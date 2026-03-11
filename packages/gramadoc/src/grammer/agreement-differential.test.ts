@@ -6,7 +6,9 @@ import {
 import { analyzeText } from './utils'
 
 function toRuleIdSet(text: string) {
-  return new Set(analyzeText(text).warnings.matches.map((match) => match.rule.id))
+  return new Set(
+    analyzeText(text).warnings.matches.map((match) => match.rule.id),
+  )
 }
 
 describe('agreement differential corpus vs LanguageTool', () => {
@@ -58,7 +60,9 @@ describe('agreement differential corpus vs LanguageTool', () => {
 
     for (const fixture of languageToolAgreementFalseNegativeFixtures) {
       const ruleIds = toRuleIdSet(fixture.text)
-      const detected = fixture.expectedRuleIds.every((ruleId) => ruleIds.has(ruleId))
+      const detected = fixture.expectedRuleIds.every((ruleId) =>
+        ruleIds.has(ruleId),
+      )
 
       if (!detected) {
         gramadocFalseNegatives += 1

@@ -84,7 +84,8 @@ export const languageToolAgreementFalseNegativeFixtures: AgreementLanguageToolFi
       },
     },
     {
-      family: 'coordinated nominal subjects still recover plural local agreement',
+      family:
+        'coordinated nominal subjects still recover plural local agreement',
       text: 'The user and admin approves the change.',
       expectedRuleIds: ['SUBJECT_VERB_AGREEMENT'],
       languageTool: {
