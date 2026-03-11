@@ -1283,6 +1283,7 @@ export const GramadocInput = forwardRef<
           emitEditorState()
         }}
         onInput={() => {
+          captureSelection()
           closePopup()
           setHoveredMatch(null)
           scheduleEditorSync()

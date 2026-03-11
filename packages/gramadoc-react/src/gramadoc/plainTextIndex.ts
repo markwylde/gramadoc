@@ -7,11 +7,14 @@ interface CharacterMapEntry {
 interface DomTextIndexState {
   plainText: string
   characters: Array<CharacterMapEntry | null>
+  selectionPoint?: { node: Node; offset: number }
+  selectionOffset?: number
 }
 
 export interface DomTextIndex {
   plainText: string
   characters: Array<CharacterMapEntry | null>
+  selectionOffset?: number
 }
 
 const STRUCTURAL_BLOCK_TAGS = new Set([
@@ -54,8 +57,30 @@ function appendCharacter(
   character: string,
   entry: CharacterMapEntry | null,
 ) {
+  if (
+    state.selectionPoint &&
+    state.selectionOffset === undefined &&
+    entry &&
+    state.selectionPoint.node === entry.node &&
+    state.selectionPoint.offset >= entry.startOffset &&
+    state.selectionPoint.offset < entry.endOffset
+  ) {
+    state.selectionOffset = state.plainText.length
+  }
+
   state.plainText += character
   state.characters.push(entry)
+}
+
+function checkSelection(state: DomTextIndexState, node: Node, offset?: number) {
+  if (
+    state.selectionPoint &&
+    state.selectionOffset === undefined &&
+    state.selectionPoint.node === node &&
+    (offset === undefined || state.selectionPoint.offset === offset)
+  ) {
+    state.selectionOffset = state.plainText.length
+  }
 }
 
 function appendSyntheticText(state: DomTextIndexState, value: string) {
@@ -178,11 +203,13 @@ function appendCollapsedText(
 
   for (let index = firstContentIndex; index <= lastContentIndex; index += 1) {
     const entry = collapsedEntries[index]
-    appendCharacter(state, entry.character, {
-      node,
-      startOffset: entry.startOffset,
-      endOffset: entry.endOffset,
-    })
+    if (entry) {
+      appendCharacter(state, entry.character, {
+        node,
+        startOffset: entry.startOffset,
+        endOffset: entry.endOffset,
+      })
+    }
   }
 
   if (hasTrailingWhitespace) {
@@ -203,21 +230,28 @@ function appendTextNode(
   const value = node.textContent ?? ''
 
   if (!value) {
+    checkSelection(state, node, 0)
     return
   }
 
   if (preserveWhitespace) {
     for (let index = 0; index < value.length; index += 1) {
+      checkSelection(state, node, index)
       appendCharacter(state, value[index] ?? '', {
         node,
         startOffset: index,
         endOffset: index + 1,
       })
     }
+    checkSelection(state, node, value.length)
     return
   }
 
+  // For collapsed text, it's trickier because multiple DOM characters map to one plain text character
+  // and some are omitted. We'll check selection at the start and end of appendCollapsedText for now.
+  checkSelection(state, node, 0)
   appendCollapsedText(state, node, value)
+  checkSelection(state, node, value.length)
 }
 
 function walkNode(
@@ -225,8 +259,14 @@ function walkNode(
   state: DomTextIndexState,
   preserveWhitespace = false,
 ) {
+  checkSelection(state, node, 0)
+
   if (node.nodeType === Node.TEXT_NODE) {
-    appendTextNode(state, node as Text, preserveWhitespace)
+    const textNode = node as Text
+    const value = textNode.textContent ?? ''
+
+    appendTextNode(state, textNode, preserveWhitespace)
+    checkSelection(state, node, value.length)
     return
   }
 
@@ -238,6 +278,7 @@ function walkNode(
 
   if (tagName === 'br') {
     ensureBoundaryBreak(state)
+    checkSelection(state, node, 1)
     return
   }
 
@@ -253,8 +294,12 @@ function walkNode(
     }
   }
 
-  for (const childNode of Array.from(node.childNodes)) {
-    walkNode(childNode, state, nextPreserveWhitespace)
+  for (let i = 0; i < node.childNodes.length; i++) {
+    const childNode = node.childNodes[i]
+    if (childNode) {
+      walkNode(childNode, state, nextPreserveWhitespace)
+    }
+    checkSelection(state, node, i + 1)
   }
 
   if (!isBlock) {
@@ -263,6 +308,7 @@ function walkNode(
 
   trimTrailingInlineWhitespace(state)
   ensureBoundaryBreak(state)
+  checkSelection(state, node, node.childNodes.length)
 }
 
 function getBoundaryPointForOffset(
@@ -271,13 +317,13 @@ function getBoundaryPointForOffset(
   mode: 'start' | 'end',
 ) {
   if (mode === 'start') {
+    // Try to find the first real character at or after this offset
     for (
       let cursor = Math.max(0, offset);
       cursor < index.characters.length;
       cursor += 1
     ) {
       const entry = index.characters[cursor]
-
       if (entry) {
         return {
           node: entry.node,
@@ -285,18 +331,48 @@ function getBoundaryPointForOffset(
         }
       }
     }
+
+    // If we're at the very end, try to find the last real character
+    for (
+      let cursor = Math.min(offset, index.characters.length) - 1;
+      cursor >= 0;
+      cursor -= 1
+    ) {
+      const entry = index.characters[cursor]
+      if (entry) {
+        return {
+          node: entry.node,
+          offset: entry.endOffset,
+        }
+      }
+    }
   } else {
+    // Try to find the first real character at or before this offset
     for (
       let cursor = Math.min(offset - 1, index.characters.length - 1);
       cursor >= 0;
       cursor -= 1
     ) {
       const entry = index.characters[cursor]
-
       if (entry) {
         return {
           node: entry.node,
           offset: entry.endOffset,
+        }
+      }
+    }
+
+    // Fallback to start of the first character
+    for (
+      let cursor = Math.max(0, offset);
+      cursor < index.characters.length;
+      cursor++
+    ) {
+      const entry = index.characters[cursor]
+      if (entry) {
+        return {
+          node: entry.node,
+          offset: entry.startOffset,
         }
       }
     }
@@ -305,14 +381,24 @@ function getBoundaryPointForOffset(
   return null
 }
 
-export function buildDomTextIndex(container: HTMLElement): DomTextIndex {
+export function buildDomTextIndex(
+  container: HTMLElement,
+  selectionPoint?: { node: Node; offset: number },
+): DomTextIndex {
   const state: DomTextIndexState = {
     plainText: '',
     characters: [],
+    selectionPoint,
   }
 
-  for (const childNode of Array.from(container.childNodes)) {
-    walkNode(childNode, state)
+  checkSelection(state, container, 0)
+
+  for (let i = 0; i < container.childNodes.length; i++) {
+    const childNode = container.childNodes[i]
+    if (childNode) {
+      walkNode(childNode, state)
+    }
+    checkSelection(state, container, i + 1)
   }
 
   trimTrailingInlineWhitespace(state)
@@ -320,6 +406,7 @@ export function buildDomTextIndex(container: HTMLElement): DomTextIndex {
   return {
     plainText: state.plainText,
     characters: state.characters.slice(0, state.plainText.length),
+    selectionOffset: state.selectionOffset,
   }
 }
 
@@ -328,10 +415,7 @@ export function findTextRange(
   offset: number,
   length: number,
 ) {
-  if (
-    index.characters.length === 0 ||
-    (length === 0 && offset > index.characters.length)
-  ) {
+  if (index.characters.length === 0) {
     return null
   }
 
@@ -343,14 +427,18 @@ export function findTextRange(
   }
 
   const range = document.createRange()
-  range.setStart(start.node, start.offset)
-  range.setEnd(end.node, end.offset)
-  return range
+  try {
+    range.setStart(start.node, start.offset)
+    range.setEnd(end.node, end.offset)
+    return range
+  } catch {
+    return null
+  }
 }
 
 export function getSelectionOffsets(
   container: HTMLElement,
-  index: DomTextIndex,
+  _index: DomTextIndex,
 ): { start: number; end: number } | null {
   const selection = window.getSelection()
   if (!selection || selection.rangeCount === 0) {
@@ -365,63 +453,24 @@ export function getSelectionOffsets(
     return null
   }
 
-  let start = -1
-  let end = -1
+  const startIndex = buildDomTextIndex(container, {
+    node: range.startContainer,
+    offset: range.startOffset,
+  })
+  const endIndex = buildDomTextIndex(container, {
+    node: range.endContainer,
+    offset: range.endOffset,
+  })
 
-  for (let i = 0; i < index.characters.length; i++) {
-    const entry = index.characters[i]
-    if (!entry) {
-      continue
-    }
-
-    if (
-      start === -1 &&
-      entry.node === range.startContainer &&
-      entry.startOffset <= range.startOffset &&
-      entry.endOffset >= range.startOffset
-    ) {
-      start = i + (range.startOffset - entry.startOffset)
-    }
-
-    if (
-      end === -1 &&
-      entry.node === range.endContainer &&
-      entry.startOffset <= range.endOffset &&
-      entry.endOffset >= range.endOffset
-    ) {
-      end = i + (range.endOffset - entry.startOffset)
-    }
-  }
-
-  // Fallback for when selection is at the very end of a text node
-  if (start === -1 || end === -1) {
-    for (let i = index.characters.length - 1; i >= 0; i--) {
-      const entry = index.characters[i]
-      if (!entry) {
-        continue
-      }
-
-      if (
-        start === -1 &&
-        entry.node === range.startContainer &&
-        entry.endOffset === range.startOffset
-      ) {
-        start = i + 1
-      }
-
-      if (
-        end === -1 &&
-        entry.node === range.endContainer &&
-        entry.endOffset === range.endOffset
-      ) {
-        end = i + 1
-      }
-    }
-  }
-
-  if (start === -1 || end === -1) {
+  if (
+    startIndex.selectionOffset === undefined ||
+    endIndex.selectionOffset === undefined
+  ) {
     return null
   }
 
-  return { start, end }
+  return {
+    start: startIndex.selectionOffset,
+    end: endIndex.selectionOffset,
+  }
 }
