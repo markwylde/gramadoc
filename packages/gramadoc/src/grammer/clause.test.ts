@@ -77,9 +77,9 @@ describe('clause metadata', () => {
 
     const makesClause = makes ? getTokenClauseTokens(context, makes) : []
 
-    expect(getClauseSubjectTokens(makesClause).map((token) => token.value)).toEqual(
-      ['every'],
-    )
+    expect(
+      getClauseSubjectTokens(makesClause).map((token) => token.value),
+    ).toEqual(['every'])
     expect(
       getClausePredicateTokens(makesClause).map((token) => token.value),
     ).toEqual(['update', 'makes', 'it', 'worse'])

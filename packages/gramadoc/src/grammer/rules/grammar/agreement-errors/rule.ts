@@ -446,21 +446,23 @@ function getLocalSubjectInfo(tokensInClause: Token[], verb: Token) {
     prepositionIndex >= 0
       ? localSubjectTokens.slice(0, prepositionIndex)
       : localSubjectTokens
-  const explicitSubject = [...headSlice].reverse().find((token, reverseIndex) => {
-    const actualIndex = headSlice.length - 1 - reverseIndex
-    const previous = headSlice[actualIndex - 1]
+  const explicitSubject = [...headSlice]
+    .reverse()
+    .find((token, reverseIndex) => {
+      const actualIndex = headSlice.length - 1 - reverseIndex
+      const previous = headSlice[actualIndex - 1]
 
-    return (
-      SINGULAR_SUBJECTS.has(token.normalized) ||
-      PLURAL_SUBJECTS.has(token.normalized) ||
-      hasPosHint(token, 'pronoun') ||
-      hasPosHint(token, 'noun') ||
-      (actualIndex === headSlice.length - 1 &&
-        previous &&
-        hasPosHint(previous, 'determiner') &&
-        hasPosHint(token, 'verb'))
-    )
-  })
+      return (
+        SINGULAR_SUBJECTS.has(token.normalized) ||
+        PLURAL_SUBJECTS.has(token.normalized) ||
+        hasPosHint(token, 'pronoun') ||
+        hasPosHint(token, 'noun') ||
+        (actualIndex === headSlice.length - 1 &&
+          previous &&
+          hasPosHint(previous, 'determiner') &&
+          hasPosHint(token, 'verb'))
+      )
+    })
 
   const head = explicitSubject ?? headSlice.at(-1)
 
@@ -564,7 +566,9 @@ function hasLeadingAuxiliaryOrModal(tokensInClause: Token[], verb: Token) {
 
   return tokensInClause
     .slice(0, verbIndex)
-    .some((token) => hasPosHint(token, 'auxiliary') || hasPosHint(token, 'modal'))
+    .some(
+      (token) => hasPosHint(token, 'auxiliary') || hasPosHint(token, 'modal'),
+    )
 }
 
 function hasEarlierAuxiliaryOrModal(tokensInClause: Token[], verb: Token) {
