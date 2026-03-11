@@ -1,0 +1,202 @@
+.gramadoc-input {
+  position: relative;
+  width: 100%;
+}
+
+.gramadoc-input__editor {
+  position: relative;
+  z-index: 1;
+  min-height: 220px;
+  padding: 16px;
+  border: 1px solid var(--gramadoc-input-border, #d7dce5);
+  border-radius: 16px;
+  background: var(--gramadoc-input-surface, #fff);
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--gramadoc-input-text, #19212f);
+  outline: none;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  box-shadow: 0 12px 30px rgba(14, 24, 42, 0.06);
+}
+
+.gramadoc-input__editor:focus {
+  border-color: var(--gramadoc-input-focus, #2d6df6);
+  box-shadow:
+    0 0 0 4px rgba(45, 109, 246, 0.12),
+    0 12px 30px rgba(14, 24, 42, 0.08);
+}
+
+.gramadoc-input__editor[contenteditable="false"] {
+  cursor: default;
+  background: #f8fafc;
+}
+
+.gramadoc-input__editor:empty::before {
+  content: attr(data-placeholder);
+  color: #90a0b7;
+  pointer-events: none;
+}
+
+.gramadoc-input__editor strong,
+.gramadoc-input__editor b {
+  font-weight: 700;
+}
+
+.gramadoc-input__editor em,
+.gramadoc-input__editor i {
+  font-style: italic;
+}
+
+.gramadoc-input__editor u {
+  text-decoration: underline;
+}
+
+.gramadoc-input__overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.gramadoc-input__underline {
+  position: absolute;
+  pointer-events: auto;
+  cursor: pointer;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  opacity: 0.95;
+  appearance: none;
+  transition:
+    transform 0.12s ease,
+    opacity 0.12s ease;
+}
+
+/* Increase hit area for touch/mouse without changing visual height */
+.gramadoc-input__underline::before {
+  content: "";
+  position: absolute;
+  top: -12px;
+  bottom: -8px;
+  left: -2px;
+  right: -2px;
+}
+
+@media (pointer: coarse) {
+  .gramadoc-input__underline::before {
+    top: -16px;
+    bottom: -12px;
+    left: -4px;
+    right: -4px;
+  }
+}
+
+.gramadoc-input__underline--hovered {
+  transform: scaleY(1.15);
+  opacity: 0.8;
+}
+
+.gramadoc-input__popup {
+  position: absolute;
+  z-index: 100;
+  min-width: 220px;
+  max-width: 360px;
+  background: var(--gramadoc-popup-bg, #fff);
+  border: 1px solid var(--gramadoc-popup-border, #dde4ef);
+  border-radius: 16px;
+  box-shadow: 0 18px 36px rgba(15, 23, 42, 0.16);
+  overflow: hidden;
+}
+
+@media (max-width: 640px) {
+  .gramadoc-input__popup {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    top: auto;
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+    border-radius: 20px 20px 0 0;
+    border-left: 0;
+    border-right: 0;
+    border-bottom: 0;
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.12);
+    transform: translateY(0);
+    animation: gramadoc-sheet-slide-up 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  @keyframes gramadoc-sheet-slide-up {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+}
+
+.gramadoc-input__popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--gramadoc-popup-header-border, #edf1f7);
+}
+
+.gramadoc-input__popup-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--gramadoc-popup-title, #1e293b);
+}
+
+.gramadoc-input__popup-close {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--gramadoc-popup-close, #64748b);
+  cursor: pointer;
+}
+
+.gramadoc-input__popup-message {
+  padding: 16px;
+  font-size: 14px;
+  color: var(--gramadoc-popup-message, #475569);
+}
+
+.gramadoc-input__popup-replacements {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 16px 16px;
+}
+
+.gramadoc-input__popup-replacement {
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--gramadoc-popup-replacement-bg, #e8f1ff);
+  color: var(--gramadoc-popup-replacement-text, #1d4ed8);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.gramadoc-input__popup-replacement--remove {
+  background: var(--gramadoc-popup-remove-bg, #fef9c3);
+  color: var(--gramadoc-popup-remove-text, #854d0e);
+}
+
+.gramadoc-input__popup-dismiss {
+  width: 100%;
+  padding: 12px 16px;
+  border: 0;
+  border-top: 1px solid var(--gramadoc-popup-header-border, #edf1f7);
+  background: var(--gramadoc-popup-dismiss-bg, #f8fafc);
+  color: var(--gramadoc-popup-dismiss-text, #64748b);
+  cursor: pointer;
+}

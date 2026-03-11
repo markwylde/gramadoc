@@ -1,0 +1,288 @@
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  /* Gramadoc Overrides */
+  --gramadoc-input-surface: transparent;
+  --gramadoc-input-text: var(--text-on-page);
+  --gramadoc-input-border: transparent;
+  --gramadoc-input-focus: transparent;
+}
+
+/* Theme: Light - Default */
+[data-theme="light-default"] {
+  --bg-app: #f8f9fa;
+  --bg-toolbar: #ffffff;
+  --bg-page: #ffffff;
+  --bg-status: #ffffff;
+  --text-primary: #202124;
+  --text-secondary: #5f6368;
+  --text-on-page: #3c4043;
+  --border-color: #dadce0;
+  --accent-color: #1a73e8;
+  --shadow-toolbar: 0 1px 2px rgba(60, 64, 67, 0.3);
+  --shadow-page: 0 1px 3px rgba(0, 0, 0, 0.12);
+  --gramadoc-popup-bg: #ffffff;
+  --gramadoc-popup-border: #dde4ef;
+  --gramadoc-popup-header-border: #edf1f7;
+  --gramadoc-popup-title: #1e293b;
+  --gramadoc-popup-close: #64748b;
+  --gramadoc-popup-message: #475569;
+  --gramadoc-popup-replacement-bg: #e8f1ff;
+  --gramadoc-popup-replacement-text: #1d4ed8;
+  --gramadoc-popup-dismiss-bg: #f8fafc;
+  --gramadoc-popup-dismiss-text: #64748b;
+}
+
+/* Theme: Light - Sepia */
+[data-theme="light-sepia"] {
+  --bg-app: #f4ecd8;
+  --bg-toolbar: #eee4cc;
+  --bg-page: #fdf6e3;
+  --bg-status: #eee4cc;
+  --text-primary: #5b4636;
+  --text-secondary: #8c786a;
+  --text-on-page: #5b4636;
+  --border-color: #d3c6aa;
+  --accent-color: #a69460;
+  --shadow-toolbar: 0 1px 2px rgba(91, 70, 54, 0.1);
+  --shadow-page: 0 2px 5px rgba(91, 70, 54, 0.1);
+  --gramadoc-popup-bg: #fdf6e3;
+  --gramadoc-popup-border: #d3c6aa;
+  --gramadoc-popup-header-border: #eee4cc;
+  --gramadoc-popup-title: #5b4636;
+  --gramadoc-popup-close: #8c786a;
+  --gramadoc-popup-message: #5b4636;
+  --gramadoc-popup-replacement-bg: #eee4cc;
+  --gramadoc-popup-replacement-text: #5b4636;
+  --gramadoc-popup-dismiss-bg: #eee4cc;
+  --gramadoc-popup-dismiss-text: #8c786a;
+}
+
+/* Theme: Light - Solarized */
+[data-theme="light-solarized"] {
+  --bg-app: #eee8d5;
+  --bg-toolbar: #fdf6e3;
+  --bg-page: #fdf6e3;
+  --bg-status: #fdf6e3;
+  --text-primary: #657b83;
+  --text-secondary: #93a1a1;
+  --text-on-page: #073642;
+  --border-color: #d8d3c1;
+  --accent-color: #268bd2;
+  --shadow-toolbar: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-page: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --gramadoc-popup-bg: #fdf6e3;
+  --gramadoc-popup-border: #d8d3c1;
+  --gramadoc-popup-header-border: #eee8d5;
+  --gramadoc-popup-title: #657b83;
+  --gramadoc-popup-close: #93a1a1;
+  --gramadoc-popup-message: #073642;
+  --gramadoc-popup-replacement-bg: #eee8d5;
+  --gramadoc-popup-replacement-text: #268bd2;
+  --gramadoc-popup-dismiss-bg: #eee8d5;
+  --gramadoc-popup-dismiss-text: #93a1a1;
+}
+
+/* Theme: Light - High Contrast */
+[data-theme="light-contrast"] {
+  --bg-app: #ffffff;
+  --bg-toolbar: #ffffff;
+  --bg-page: #ffffff;
+  --bg-status: #ffffff;
+  --text-primary: #000000;
+  --text-secondary: #333333;
+  --text-on-page: #000000;
+  --border-color: #000000;
+  --accent-color: #0000ff;
+  --shadow-toolbar: none;
+  --shadow-page: none;
+  --gramadoc-popup-bg: #ffffff;
+  --gramadoc-popup-border: #000000;
+  --gramadoc-popup-header-border: #000000;
+  --gramadoc-popup-title: #000000;
+  --gramadoc-popup-close: #000000;
+  --gramadoc-popup-message: #000000;
+  --gramadoc-popup-replacement-bg: #0000ff;
+  --gramadoc-popup-replacement-text: #ffffff;
+  --gramadoc-popup-dismiss-bg: #ffffff;
+  --gramadoc-popup-dismiss-text: #000000;
+}
+
+/* Theme: Light - Minimalist */
+[data-theme="light-minimal"] {
+  --bg-app: #f2f2f2;
+  --bg-toolbar: #f2f2f2;
+  --bg-page: #ffffff;
+  --bg-status: #f2f2f2;
+  --text-primary: #333333;
+  --text-secondary: #777777;
+  --text-on-page: #333333;
+  --border-color: #e0e0e0;
+  --accent-color: #333333;
+  --shadow-toolbar: none;
+  --shadow-page: 0 4px 12px rgba(0, 0, 0, 0.05);
+  --gramadoc-popup-bg: #ffffff;
+  --gramadoc-popup-border: #e0e0e0;
+  --gramadoc-popup-header-border: #f2f2f2;
+  --gramadoc-popup-title: #333333;
+  --gramadoc-popup-close: #777777;
+  --gramadoc-popup-message: #333333;
+  --gramadoc-popup-replacement-bg: #333333;
+  --gramadoc-popup-replacement-text: #ffffff;
+  --gramadoc-popup-dismiss-bg: #f2f2f2;
+  --gramadoc-popup-dismiss-text: #777777;
+}
+
+/* Theme: Dark - Default */
+[data-theme="dark-default"] {
+  --bg-app: #171717;
+  --bg-toolbar: #202124;
+  --bg-page: #2d2e31;
+  --bg-status: #202124;
+  --text-primary: #e8eaed;
+  --text-secondary: #9aa0a6;
+  --text-on-page: #e8eaed;
+  --border-color: #3c4043;
+  --accent-color: #8ab4f8;
+  --shadow-toolbar: 0 4px 6px rgba(0, 0, 0, 0.3);
+  --shadow-page: 0 8px 16px rgba(0, 0, 0, 0.4);
+  --gramadoc-popup-bg: #2d2e31;
+  --gramadoc-popup-border: #3c4043;
+  --gramadoc-popup-header-border: #3c4043;
+  --gramadoc-popup-title: #e8eaed;
+  --gramadoc-popup-close: #9aa0a6;
+  --gramadoc-popup-message: #e8eaed;
+  --gramadoc-popup-replacement-bg: #3e6cf4;
+  --gramadoc-popup-replacement-text: #ffffff;
+  --gramadoc-popup-dismiss-bg: #202124;
+  --gramadoc-popup-dismiss-text: #9aa0a6;
+}
+
+/* Theme: Dark - Deep Space */
+[data-theme="dark-deep"] {
+  --bg-app: #000000;
+  --bg-toolbar: #000000;
+  --bg-page: #121212;
+  --bg-status: #000000;
+  --text-primary: #ffffff;
+  --text-secondary: #888888;
+  --text-on-page: #ffffff;
+  --border-color: #333333;
+  --accent-color: #ffffff;
+  --shadow-toolbar: none;
+  --shadow-page: 0 0 0 1px #333333;
+  --gramadoc-popup-bg: #121212;
+  --gramadoc-popup-border: #333333;
+  --gramadoc-popup-header-border: #333333;
+  --gramadoc-popup-title: #ffffff;
+  --gramadoc-popup-close: #888888;
+  --gramadoc-popup-message: #ffffff;
+  --gramadoc-popup-replacement-bg: #ffffff;
+  --gramadoc-popup-replacement-text: #000000;
+  --gramadoc-popup-dismiss-bg: #000000;
+  --gramadoc-popup-dismiss-text: #888888;
+}
+
+/* Theme: Dark - Solarized */
+[data-theme="dark-solarized"] {
+  --bg-app: #002b36;
+  --bg-toolbar: #073642;
+  --bg-page: #073642;
+  --bg-status: #073642;
+  --text-primary: #93a1a1;
+  --text-secondary: #586e75;
+  --text-on-page: #93a1a1;
+  --border-color: #002b36;
+  --accent-color: #268bd2;
+  --shadow-toolbar: 0 4px 10px rgba(0, 0, 0, 0.3);
+  --shadow-page: 0 10px 30px rgba(0, 0, 0, 0.5);
+  --gramadoc-popup-bg: #073642;
+  --gramadoc-popup-border: #002b36;
+  --gramadoc-popup-header-border: #002b36;
+  --gramadoc-popup-title: #93a1a1;
+  --gramadoc-popup-close: #586e75;
+  --gramadoc-popup-message: #93a1a1;
+  --gramadoc-popup-replacement-bg: #268bd2;
+  --gramadoc-popup-replacement-text: #ffffff;
+  --gramadoc-popup-dismiss-bg: #002b36;
+  --gramadoc-popup-dismiss-text: #586e75;
+}
+
+/* Theme: Dark - Nord */
+[data-theme="dark-nord"] {
+  --bg-app: #2e3440;
+  --bg-toolbar: #3b4252;
+  --bg-page: #3b4252;
+  --bg-status: #3b4252;
+  --text-primary: #eceff4;
+  --text-secondary: #d8dee9;
+  --text-on-page: #eceff4;
+  --border-color: #4c566a;
+  --accent-color: #88c0d0;
+  --shadow-toolbar: 0 2px 10px rgba(0, 0, 0, 0.2);
+  --shadow-page: 0 10px 20px rgba(0, 0, 0, 0.3);
+  --gramadoc-popup-bg: #3b4252;
+  --gramadoc-popup-border: #4c566a;
+  --gramadoc-popup-header-border: #2e3440;
+  --gramadoc-popup-title: #eceff4;
+  --gramadoc-popup-close: #d8dee9;
+  --gramadoc-popup-message: #eceff4;
+  --gramadoc-popup-replacement-bg: #88c0d0;
+  --gramadoc-popup-replacement-text: #2e3440;
+  --gramadoc-popup-dismiss-bg: #2e3440;
+  --gramadoc-popup-dismiss-text: #d8dee9;
+}
+
+/* Theme: Dark - Midnight */
+[data-theme="dark-midnight"] {
+  --bg-app: #0f111a;
+  --bg-toolbar: #1a1c2e;
+  --bg-page: #1a1c2e;
+  --bg-status: #1a1c2e;
+  --text-primary: #a1a1af;
+  --text-secondary: #5a5a7a;
+  --text-on-page: #ffffff;
+  --border-color: #2b2e42;
+  --accent-color: #bb9af7;
+  --shadow-toolbar: 0 5px 15px rgba(0, 0, 0, 0.4);
+  --shadow-page: 0 10px 30px rgba(0, 0, 0, 0.6);
+  --gramadoc-popup-bg: #1a1c2e;
+  --gramadoc-popup-border: #2b2e42;
+  --gramadoc-popup-header-border: #0f111a;
+  --gramadoc-popup-title: #ffffff;
+  --gramadoc-popup-close: #5a5a7a;
+  --gramadoc-popup-message: #ffffff;
+  --gramadoc-popup-replacement-bg: #bb9af7;
+  --gramadoc-popup-replacement-text: #1a1c2e;
+  --gramadoc-popup-dismiss-bg: #0f111a;
+  --gramadoc-popup-dismiss-text: #5a5a7a;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+#root {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+* {
+  box-sizing: border-box;
+}

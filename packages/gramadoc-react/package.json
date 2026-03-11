@@ -1,0 +1,34 @@
+{
+  "name": "@markwylde/gramadoc-react",
+  "version": "0.0.0",
+  "type": "module",
+  "main": "./dist/gramadoc/index.js",
+  "types": "./dist/gramadoc/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/gramadoc/index.d.ts",
+      "import": "./dist/gramadoc/index.js"
+    },
+    "./styles.css": "./dist/gramadoc/GramadocInput.css"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -b --force tsconfig.build.json && mkdir -p dist/gramadoc && cp src/gramadoc/GramadocInput.css dist/gramadoc/GramadocInput.css"
+  },
+  "dependencies": {
+    "@markwylde/gramadoc": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "typescript": "~5.9.3"
+  }
+}

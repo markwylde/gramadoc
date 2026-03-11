@@ -1,0 +1,19 @@
+{
+  "name": "@markwylde/gramadoc-api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -b --force tsconfig.build.json",
+    "dev": "node --watch src/index.ts",
+    "start": "node dist/index.js"
+  },
+  "devDependencies": {
+    "@types/node": "^25.3.5",
+    "typescript": "~5.9.3"
+  }
+}

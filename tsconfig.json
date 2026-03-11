@@ -1,0 +1,9 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./packages/gramadoc/tsconfig.build.json" },
+    { "path": "./packages/gramadoc-react/tsconfig.build.json" },
+    { "path": "./apps/gramadoc-demo/tsconfig.app.json" },
+    { "path": "./apps/gramadoc-demo/tsconfig.node.json" }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "name": "@markwylde/gramadoc",
+  "version": "0.0.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -b --force tsconfig.build.json",
+    "test": "vitest run src",
+    "test:release-gate": "vitest run src/grammer/evaluation.test.ts src/grammer/evaluation-fixtures.test.ts src/grammer/gap-evaluation.test.ts src/grammer/release-gate.test.ts src/grammer/regression.test.ts"
+  },
+  "dependencies": {
+    "parse5": "^8.0.0",
+    "wordlist-english": "^1.2.1"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^4.0.18",
+    "typescript": "~5.9.3",
+    "vitest": "^4.0.18"
+  }
+}

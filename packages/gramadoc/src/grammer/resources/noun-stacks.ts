@@ -1,0 +1,17 @@
+export const nounStackAllowedPhrases = [
+  'application programming interface',
+  'api response body',
+  'command line flag',
+  'command line tool',
+  'customer support team',
+  'design system token',
+  'error message copy',
+  'feature flag config',
+  'github actions workflow',
+  'open source project',
+  'product roadmap update',
+  'release notes page',
+  'sdk client library',
+  'user interface copy',
+  'user interface text',
+] as const

@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "strict": true,
+    "paths": {
+      "@markwylde/gramadoc": ["./packages/gramadoc/src/index.ts"],
+      "@markwylde/gramadoc-react": [
+        "./packages/gramadoc-react/src/gramadoc/index.ts"
+      ],
+      "@markwylde/gramadoc-react/styles.css": [
+        "./packages/gramadoc-react/src/gramadoc/GramadocInput.css"
+      ]
+    },
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true
+  }
+}
