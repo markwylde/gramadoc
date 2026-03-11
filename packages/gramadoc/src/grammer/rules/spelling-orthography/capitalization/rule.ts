@@ -506,7 +506,7 @@ export const mixedCasingErrorsRule: GrammerRule = {
     return tokens.flatMap((token, index) => {
       if (
         !MIXED_CASE_WORD_REGEX.test(token.value) ||
-        BRAND_NAMES[token.normalized] === token.value ||
+        BRAND_NAMES[token.normalized] !== undefined ||
         KNOWN_ACRONYMS.has(
           token.value.toUpperCase() as (typeof capitalizationAcronyms)[number],
         ) ||
@@ -559,7 +559,6 @@ export const brandCapitalizationRule: GrammerRule = {
       if (
         !replacement ||
         token.value === replacement ||
-        token.isSentenceStart ||
         isCodeAdjacentToken(token) ||
         isStructuredTextToken(token, structuredTextSpans)
       ) {

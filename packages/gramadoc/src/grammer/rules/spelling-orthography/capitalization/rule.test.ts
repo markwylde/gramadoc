@@ -122,6 +122,39 @@ describe('properNounCapitalizationRule', () => {
     expect(matches[4].replacements).toEqual([{ value: 'Christmas' }])
   })
 
+  it('covers additional weekdays and unambiguous months', () => {
+    const matches = runRule(
+      properNounCapitalizationRule,
+      'We review on tuesday in february, then ship on thursday in october before saturday maintenance.',
+    )
+
+    expect(matches).toHaveLength(5)
+    expect(matches.map((match) => match.replacements)).toEqual([
+      [{ value: 'Tuesday' }],
+      [{ value: 'February' }],
+      [{ value: 'Thursday' }],
+      [{ value: 'October' }],
+      [{ value: 'Saturday' }],
+    ])
+  })
+
+  it('covers additional common place names', () => {
+    const matches = runRule(
+      properNounCapitalizationRule,
+      'Teams in berlin, tokyo, sydney, canada, and germany compared notes before flying through madrid.',
+    )
+
+    expect(matches).toHaveLength(6)
+    expect(matches.map((match) => match.replacements)).toEqual([
+      [{ value: 'Berlin' }],
+      [{ value: 'Tokyo' }],
+      [{ value: 'Sydney' }],
+      [{ value: 'Canada' }],
+      [{ value: 'Germany' }],
+      [{ value: 'Madrid' }],
+    ])
+  })
+
   it('handles context-sensitive month names only in date-like contexts', () => {
     const matches = runRule(
       properNounCapitalizationRule,
@@ -193,6 +226,24 @@ describe('incorrectAllCapsUsageRule', () => {
       replacements: [{ value: 'very' }],
     })
   })
+
+  it('allows common technical acronyms in running text', () => {
+    expect(
+      runRule(
+        incorrectAllCapsUsageRule,
+        'The CLI calls the HTTP API, writes CSV and XML files, and opens the IDE over SSH.',
+      ),
+    ).toEqual([])
+  })
+
+  it('allows the expanded technical acronym list', () => {
+    expect(
+      runRule(
+        incorrectAllCapsUsageRule,
+        'The CDN fronts the CSS and JPEG assets while the GPU streams UUID and JWT data over TLS to the LDAP service.',
+      ),
+    ).toEqual([])
+  })
 })
 
 describe('mixedCasingErrorsRule', () => {
@@ -212,6 +263,12 @@ describe('mixedCasingErrorsRule', () => {
         mixedCasingErrorsRule,
         'PCs were everywhere. APIs changed quickly. URLs were shorter then.',
       ),
+    ).toEqual([])
+  })
+
+  it('defers known brand names to the brand capitalization rule', () => {
+    expect(
+      runRule(mixedCasingErrorsRule, 'MacOS still appears in old notes.'),
     ).toEqual([])
   })
 })
@@ -238,6 +295,51 @@ describe('brandCapitalizationRule', () => {
         'OpenAI announced the launch. Use `openai` in this literal example.',
       ),
     ).toEqual([])
+  })
+
+  it('flags macOS casing variants, including at sentence start', () => {
+    const matches = runRule(
+      brandCapitalizationRule,
+      'MacOS can be frustrating. I also wrote macos and MACOS in notes.',
+    )
+
+    expect(matches).toHaveLength(3)
+    expect(matches[0].replacements).toEqual([{ value: 'macOS' }])
+    expect(matches[1].replacements).toEqual([{ value: 'macOS' }])
+    expect(matches[2].replacements).toEqual([{ value: 'macOS' }])
+  })
+
+  it('flags additional stable brand casing variants', () => {
+    const matches = runRule(
+      brandCapitalizationRule,
+      'We migrated from gitlab to linkedin campaigns while learning react and discussing npm.',
+    )
+
+    expect(matches).toHaveLength(3)
+    expect(matches.map((match) => match.replacements)).toEqual([
+      [{ value: 'GitLab' }],
+      [{ value: 'LinkedIn' }],
+      [{ value: 'React' }],
+    ])
+  })
+
+  it('flags additional product and platform casing variants', () => {
+    const matches = runRule(
+      brandCapitalizationRule,
+      'We tested popOs with docker, kubernetes, firefox, wordpress, chatgpt, and mongodb before exporting to postgresql.',
+    )
+
+    expect(matches).toHaveLength(8)
+    expect(matches.map((match) => match.replacements)).toEqual([
+      [{ value: 'Pop!_OS' }],
+      [{ value: 'Docker' }],
+      [{ value: 'Kubernetes' }],
+      [{ value: 'Firefox' }],
+      [{ value: 'WordPress' }],
+      [{ value: 'ChatGPT' }],
+      [{ value: 'MongoDB' }],
+      [{ value: 'PostgreSQL' }],
+    ])
   })
 })
 
