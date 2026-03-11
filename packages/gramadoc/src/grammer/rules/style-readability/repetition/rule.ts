@@ -119,9 +119,14 @@ function isAllowedStyleRepetitionToken(
   if (
     token.isCapitalized ||
     token.lemma.length < STYLE_REPETITION_THRESHOLDS[bucket].minimumLength ||
-    isTechnicalTerm(token) ||
-    token.posHintConfidence === 'low' ||
-    token.usedFallbackPosGuess
+    isTechnicalTerm(token)
+  ) {
+    return false
+  }
+
+  if (
+    bucket !== 'noun' &&
+    (token.posHintConfidence === 'low' || token.usedFallbackPosGuess)
   ) {
     return false
   }

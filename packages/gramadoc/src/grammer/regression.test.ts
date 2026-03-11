@@ -23,6 +23,11 @@ const benchmarkCorpus = [
     expectedRuleIds: ['SUBJECT_VERB_AGREEMENT'],
   },
   {
+    family: 'agreement local singular bare verb',
+    text: 'Every update make it worse. Each deploy fix one thing.',
+    expectedRuleIds: ['SUBJECT_VERB_AGREEMENT'],
+  },
+  {
     family: 'prepositions',
     text: 'We focused in the API docs.',
     expectedRuleIds: ['INCORRECT_PREPOSITIONS'],
@@ -89,6 +94,9 @@ const falsePositiveCorpus = [
   "But you're stuck with macOS. You're done when the build is green. You're offline right now.",
   "It's safe to continue, and it's broken again while their API docs stay live.",
   "Who's ready to ship, and whose team owns the follow-up?",
+  "I can't stand it and every update makes it worse.",
+  'We noticed it and each deploy fixes one thing.',
+  'I know it and every reminder helps.',
 ]
 
 describe('benchmark corpus', () => {

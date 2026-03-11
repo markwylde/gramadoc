@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { runRule } from '../../testUtils'
 import { subjectVerbAgreementRule, thereIsAreAgreementRule } from './rule'
+import { buildRuleCheckContext } from '../../../utils'
 
 describe('subjectVerbAgreementRule', () => {
   it('flags simple subject-verb agreement mismatches', () => {
@@ -128,11 +129,151 @@ describe('subjectVerbAgreementRule', () => {
     })
   })
 
+  it('recovers plural-subject mismatches with sentence-final and complement predicates', () => {
+    const matches = runRule(
+      subjectVerbAgreementRule,
+      'These plans works. The results seems wrong. Many teams depends on this.',
+    )
+
+    expect(matches).toHaveLength(3)
+    expect(matches[0]).toMatchObject({
+      message: 'Use "work" with "plans".',
+      replacements: [{ value: 'work' }],
+    })
+    expect(matches[1]).toMatchObject({
+      message: 'Use "seem" with "results".',
+      replacements: [{ value: 'seem' }],
+    })
+    expect(matches[2]).toMatchObject({
+      message: 'Use "depend" with "teams".',
+      replacements: [{ value: 'depend' }],
+    })
+  })
+
+  it('re-expands to singular local subjects when the bare verb is a clean predicate', () => {
+    const matches = runRule(
+      subjectVerbAgreementRule,
+      'Every update make it worse. Each deploy fix one thing. This feature help new users. A reminder keep me honest. One of the changes make sense.',
+    )
+
+    expect(matches).toHaveLength(5)
+    expect(matches[0]).toMatchObject({
+      message: 'Use "makes" with "update".',
+      replacements: [{ value: 'makes' }],
+    })
+    expect(matches[1]).toMatchObject({
+      message: 'Use "fixes" with "deploy".',
+      replacements: [{ value: 'fixes' }],
+    })
+    expect(matches[2]).toMatchObject({
+      message: 'Use "helps" with "feature".',
+      replacements: [{ value: 'helps' }],
+    })
+    expect(matches[3]).toMatchObject({
+      message: 'Use "keeps" with "reminder".',
+      replacements: [{ value: 'keeps' }],
+    })
+    expect(matches[4]).toMatchObject({
+      message: 'Use "makes" with "One".',
+      replacements: [{ value: 'makes' }],
+    })
+  })
+
+  it('stays quiet on coordinated sentences where the local singular subject matches', () => {
+    expect(
+      runRule(
+        subjectVerbAgreementRule,
+        "I can't stand it and every update makes it worse. We noticed it and each deploy fixes one thing. I know it and every reminder helps. We can't fix it and each hotpatch resolves one issue. I don't mind it and every status update helps.",
+      ),
+    ).toEqual([])
+  })
+
+  it('stays quiet on grammatical clauses built around contracted auxiliaries', () => {
+    expect(
+      runRule(
+        subjectVerbAgreementRule,
+        "I can't stand delays. We don't like regressions. She won't listen.",
+      ),
+    ).toEqual([])
+  })
+
+  it('does not reintroduce bare-verb false positives after auxiliaries or modals', () => {
+    expect(
+      runRule(
+        subjectVerbAgreementRule,
+        "I can't stand delays. We don't like regressions. She won't listen. Every user can log in. This report should read clearly.",
+      ),
+    ).toEqual([])
+  })
+
+  it('still flags mismatches when the finite verb is a contracted auxiliary', () => {
+    const matches = runRule(
+      subjectVerbAgreementRule,
+      "They doesn't care. She don't agree.",
+    )
+
+    expect(matches).toHaveLength(2)
+    expect(matches[0]).toMatchObject({
+      message: 'Use "don\'t" with "They".',
+      replacements: [{ value: "don't" }],
+    })
+    expect(matches[1]).toMatchObject({
+      message: 'Use "doesn\'t" with "She".',
+      replacements: [{ value: "doesn't" }],
+    })
+  })
+
+  it('uses the local subject phrase for regular s-form verbs', () => {
+    const context = buildRuleCheckContext(
+      "I can't stand it and every update makes it worse.",
+    )
+
+    expect(context.clauseRanges.map((clause) => clause.text)).toEqual([
+      "I can't stand it",
+      'and every update makes it worse',
+    ])
+    expect(context.tokens.map((token) => `${token.value}:${token.clausePart}`)).toEqual([
+      'I:subject',
+      "can't:predicate",
+      'stand:predicate',
+      'it:predicate',
+      'and:lead',
+      'every:subject',
+      'update:predicate',
+      'makes:predicate',
+      'it:predicate',
+      'worse:predicate',
+    ])
+    expect(runRule(subjectVerbAgreementRule, context.text)).toEqual([])
+  })
+
+  it('re-expands coordinated local subjects for regular finite verbs', () => {
+    const matches = runRule(
+      subjectVerbAgreementRule,
+      'The user and admin approves the change.',
+    )
+
+    expect(matches).toHaveLength(1)
+    expect(matches[0]).toMatchObject({
+      message: 'Use "approve" with "admin".',
+      replacements: [{ value: 'approve' }],
+    })
+  })
+
   it('does not flag was/were agreement on multi-word proper names', () => {
     expect(
       runRule(
         subjectVerbAgreementRule,
         'Sun Microsystems was a familiar name. Bell Labs was highly influential.',
+      ),
+    ).toEqual([])
+  })
+
+  it('stays quiet on singular series nouns and titled works with internal of-phrases', () => {
+    expect(
+      runRule(
+        subjectVerbAgreementRule,
+        'A series of updates is live. The series of tests is complete. The Chronicles of Narnia is on the shelf.',
       ),
     ).toEqual([])
   })
@@ -165,6 +306,24 @@ describe('subjectVerbAgreementRule', () => {
       message: 'Use "are" with "reports".',
       replacements: [{ value: 'are' }],
     })
+  })
+
+  it('stays quiet when unknown words only provide weak local evidence', () => {
+    expect(
+      runRule(
+        subjectVerbAgreementRule,
+        'Every frobnicator glips the queue. These frobnicators glips the queue.',
+      ),
+    ).toEqual([])
+  })
+
+  it('stays quiet on recovered broad-coverage counterparts and known risky correct prose', () => {
+    expect(
+      runRule(
+        subjectVerbAgreementRule,
+        "These plans work. The results seem wrong. Many teams depend on this. I can't stand it and every update makes it worse.",
+      ),
+    ).toEqual([])
   })
 })
 

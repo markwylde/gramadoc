@@ -16,6 +16,7 @@
   "scripts": {
     "build": "tsc -b --force tsconfig.build.json",
     "test": "vitest run src",
+    "test:differential": "vitest run src/grammer/agreement-differential.test.ts",
     "test:release-gate": "vitest run src/grammer/evaluation.test.ts src/grammer/evaluation-fixtures.test.ts src/grammer/gap-evaluation.test.ts src/grammer/release-gate.test.ts src/grammer/regression.test.ts"
   },
   "dependencies": {

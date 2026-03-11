@@ -166,6 +166,22 @@ export const highPriorityGapEvaluationFixtures: EvaluationFixture[] = [
     rootCause: 'rule-threshold',
     riskTier: 'risky',
   },
+  {
+    family: 'agreement local singular bare verb',
+    text: 'Every update make it worse. Each deploy fix one thing.',
+    expectedRuleIds: ['SUBJECT_VERB_AGREEMENT'],
+    classification: 'correctness',
+    rootCause: 'phrase-boundary',
+    riskTier: 'moderate',
+  },
+  {
+    family: 'agreement recovered complement coverage',
+    text: 'These plans works. The results seems wrong. Many teams depends on this.',
+    expectedRuleIds: ['SUBJECT_VERB_AGREEMENT'],
+    classification: 'correctness',
+    rootCause: 'phrase-boundary',
+    riskTier: 'moderate',
+  },
 ]
 
 export const highPriorityGapFalsePositiveFixtures: FalsePositiveFixture[] = [
@@ -249,6 +265,22 @@ export const highPriorityGapFalsePositiveFixtures: FalsePositiveFixture[] = [
     riskyRuleIds: ['THEIR_THERE_THEYRE'],
     classification: 'correctness',
     rootCause: 'fallback-pos',
+    riskTier: 'risky',
+  },
+  {
+    family: 'agreement coordinated local subject quiet',
+    text: "I can't stand it and every update makes it worse. We noticed it and each deploy fixes one thing. I know it and every reminder helps.",
+    riskyRuleIds: ['SUBJECT_VERB_AGREEMENT'],
+    classification: 'correctness',
+    rootCause: 'phrase-boundary',
+    riskTier: 'risky',
+  },
+  {
+    family: 'agreement recovered complement quiet',
+    text: 'These plans work. The results seem wrong. Many teams depend on this.',
+    riskyRuleIds: ['SUBJECT_VERB_AGREEMENT'],
+    classification: 'correctness',
+    rootCause: 'phrase-boundary',
     riskTier: 'risky',
   },
 ]

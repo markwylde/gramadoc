@@ -22,6 +22,13 @@ const FINITE_AUXILIARY_WORDS = new Set([
   'will',
   'would',
 ])
+const OBJECT_OR_COMPLEMENT_HINTS = new Set([
+  'adverb',
+  'determiner',
+  'noun',
+  'pronoun',
+])
+const CLAUSE_COORDINATORS = new Set(['and', 'but', 'or'])
 
 const STRONG_CLAUSE_BOUNDARY_REGEX = /(?:--|—|[;:()[\]{}])/u
 const COMMA_BOUNDARY_REGEX = /,\s*$/u
@@ -35,7 +42,39 @@ function isFiniteVerbCandidate(token: Token) {
   )
 }
 
+function isLikelyFiniteSFormVerb(
+  token: Token | undefined,
+  previous: Token | undefined,
+  next: Token | undefined,
+) {
+  if (
+    !token ||
+    !/^[a-z]+$/u.test(token.normalized) ||
+    !token.normalized.endsWith('s') ||
+    /ss$/u.test(token.normalized) ||
+    hasPosHint(token, 'preposition') ||
+    !previous ||
+    !next
+  ) {
+    return false
+  }
+
+  if (
+    !isSubjectStarter(previous) ||
+    !next.posHints.some((hint) => OBJECT_OR_COMPLEMENT_HINTS.has(hint)) ||
+    previous.normalized === 'and'
+  ) {
+    return false
+  }
+
+  return token.posHintConfidence !== 'low' || hasPosHint(token, 'verb')
+}
+
 function isSubjectStarter(token: Token) {
+  if (CLAUSE_COORDINATORS.has(token.normalized)) {
+    return false
+  }
+
   return (
     hasPosHint(token, 'determiner') ||
     hasPosHint(token, 'noun') ||
@@ -50,6 +89,22 @@ function isVerbLikeToken(token: Token) {
     hasPosHint(token, 'auxiliary') ||
     hasPosHint(token, 'verb')
   )
+}
+
+function isAuxiliaryLeadingIntoMainVerb(tokens: Token[], index: number) {
+  const token = tokens[index]
+  const next = tokens[index + 1]
+
+  if (
+    !token ||
+    !next ||
+    !/^\s+$/u.test(token.trailingText) ||
+    !(hasPosHint(token, 'modal') || hasPosHint(token, 'auxiliary'))
+  ) {
+    return false
+  }
+
+  return hasPosHint(next, 'verb') && !hasPosHint(next, 'preposition')
 }
 
 function isLikelyPostNominalModifier(tokens: Token[], index: number) {
@@ -78,7 +133,12 @@ function getPredicateCandidateScore(tokens: Token[], index: number) {
   const previous = tokens[index - 1]
   const next = tokens[index + 1]
 
-  if (!token || !isVerbLikeToken(token) || hasPosHint(token, 'preposition')) {
+  if (
+    !token ||
+    (!isVerbLikeToken(token) &&
+      !isLikelyFiniteSFormVerb(token, previous, next)) ||
+    hasPosHint(token, 'preposition')
+  ) {
     return Number.NEGATIVE_INFINITY
   }
 
@@ -93,6 +153,10 @@ function getPredicateCandidateScore(tokens: Token[], index: number) {
   }
 
   if (hasPosHint(token, 'verb')) {
+    score += 3
+  }
+
+  if (isLikelyFiniteSFormVerb(token, previous, next)) {
     score += 3
   }
 
@@ -133,6 +197,10 @@ function getPredicateCandidateScore(tokens: Token[], index: number) {
     score -= 4
   }
 
+  if (isAuxiliaryLeadingIntoMainVerb(tokens, index)) {
+    score -= 5
+  }
+
   return score
 }
 
@@ -149,7 +217,10 @@ function findNearbyFiniteVerbIndex(tokens: Token[], startIndex: number) {
       return null
     }
 
-    if (isFiniteVerbCandidate(token)) {
+    if (
+      isFiniteVerbCandidate(token) ||
+      isLikelyFiniteSFormVerb(token, tokens[index - 1], tokens[index + 1])
+    ) {
       return index
     }
   }
@@ -157,11 +228,31 @@ function findNearbyFiniteVerbIndex(tokens: Token[], startIndex: number) {
   return null
 }
 
+function hasEarlierPredicateCandidate(tokens: Token[], index: number) {
+  if (index <= 0) {
+    return false
+  }
+
+  return findPredicateIndex(tokens.slice(0, index)) !== null
+}
+
 function shouldStartClause(tokens: Token[], index: number) {
   const token = tokens[index]
+  const previous = tokens[index - 1]
 
   if (!token || index === 0) {
     return false
+  }
+
+  if (
+    CLAUSE_COORDINATORS.has(token.normalized) &&
+    previous &&
+    token.trailingText.trim().length === 0 &&
+    isSubjectStarter(previous) &&
+    findNearbyFiniteVerbIndex(tokens, index) !== null &&
+    hasEarlierPredicateCandidate(tokens, index)
+  ) {
+    return true
   }
 
   if (STRONG_CLAUSE_BOUNDARY_REGEX.test(token.leadingText)) {

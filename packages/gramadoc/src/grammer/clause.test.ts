@@ -1,4 +1,9 @@
 import { describe, expect, it } from 'vitest'
+import {
+  getClausePredicateTokens,
+  getClauseSubjectTokens,
+  getTokenClauseTokens,
+} from './rule-helpers.js'
 import { buildRuleCheckContext } from './utils'
 
 describe('clause metadata', () => {
@@ -55,6 +60,31 @@ describe('clause metadata', () => {
       'names:predicate',
       'in:predicate',
       'docs:predicate',
+    ])
+  })
+
+  it('splits coordinated clauses around a local predicate after a coordinator', () => {
+    const context = buildRuleCheckContext(
+      "I can't stand it and every update makes it worse.",
+    )
+    const makes = context.tokens.find((token) => token.normalized === 'makes')
+
+    expect(context.clauseRanges.map((clause) => clause.text)).toEqual([
+      "I can't stand it",
+      'and every update makes it worse',
+    ])
+    expect(makes?.clausePart).toBe('predicate')
+
+    const makesClause = makes ? getTokenClauseTokens(context, makes) : []
+
+    expect(getClauseSubjectTokens(makesClause).map((token) => token.value)).toEqual([
+      'every',
+    ])
+    expect(getClausePredicateTokens(makesClause).map((token) => token.value)).toEqual([
+      'update',
+      'makes',
+      'it',
+      'worse',
     ])
   })
 })
