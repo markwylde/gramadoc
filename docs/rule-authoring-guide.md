@@ -33,10 +33,17 @@ resource addition that plugs into the shared helpers already in
 ## Current Building Blocks
 
 - `resources/lexical-rules.ts`: shared metadata and validation for lexical packs
+- `morphology.ts`: shared lemma and verb-form analysis for morphology-sensitive
+  rules
 - `rule-helpers.ts`: token phrase matching, lexical guards, clause helpers, and
   block-aware matching
 - `patterns.ts`: lower-level phrase and token pattern utilities
 - `utils.ts`: `createMatch`, analysis helpers, and test context setup
+
+Morphology-sensitive rules should also read:
+
+- `docs/morphology-design-note.md`
+- `docs/morphology-maintenance-guide.md`
 
 ## Where New Rules Usually Go
 
@@ -56,9 +63,12 @@ resource addition that plugs into the shared helpers already in
    pack.
 2. Reuse shared helpers such as token phrase matching, lexical guards, or
    resource validation.
-3. Add a dedicated rule only when the behavior cannot be expressed cleanly as
-   data.
-4. Add regression coverage that proves both the intended detection and the
+3. If the rule depends on lemmas, base verbs, participles, or inflection
+   families, use the shared morphology helper instead of adding rule-local
+   suffix stripping or stem recovery.
+4. Add a dedicated rule only when the behavior cannot be expressed cleanly as
+   data or shared helpers.
+5. Add regression coverage that proves both the intended detection and the
    expected quiet cases.
 
 ## Resource Expectations
@@ -126,6 +136,8 @@ Before shipping a new default-on rule, explicitly check:
 - does this break on technical identifiers or docs prose?
 - does this break in headings, lists, or blockquotes?
 - does this depend on context the current tokenizer cannot see reliably?
+- does this depend on morphology that should come from the shared helper rather
+  than local string slicing?
 
 If the answer is yes, either add a guard, move it into an optional pack, or
 defer it until the contextual framework is stronger.
@@ -155,4 +167,6 @@ Weak reasons:
 3. Guard against quoted literal mentions and code-like contexts where relevant.
 4. Keep messages short and explainable.
 5. Prefer multiple suggestions only when several rewrites are genuinely useful.
-6. Update the relevant gap checklist only after tests and docs are in place.
+6. Do not add bespoke morphology logic when the shared helper already covers the
+   form family.
+7. Update the relevant gap checklist only after tests and docs are in place.
