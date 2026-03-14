@@ -88,6 +88,35 @@ function getEditorHtml(editor: HTMLDivElement) {
   return isVisuallyEmpty ? '' : normalizeEditorHtml(editor.innerHTML)
 }
 
+function normalizePlainTextLineEndings(text: string) {
+  return text.replace(/\r\n?/gu, '\n')
+}
+
+function escapeHtmlText(text: string) {
+  return text
+    .replace(/&/gu, '&amp;')
+    .replace(/</gu, '&lt;')
+    .replace(/>/gu, '&gt;')
+}
+
+export function plainTextToEditorHtml(text: string) {
+  const normalizedText = normalizePlainTextLineEndings(text)
+
+  if (!normalizedText.trim()) {
+    return ''
+  }
+
+  const paragraphs = normalizedText.split(/\n{2,}/u)
+  return paragraphs
+    .map((paragraphText) => {
+      const lines = paragraphText.split('\n')
+      const html = lines.map((line) => escapeHtmlText(line)).join('<br>')
+
+      return `<p>${html || '<br>'}</p>`
+    })
+    .join('')
+}
+
 function focusEditorAtEnd(editor: HTMLDivElement) {
   const selection = window.getSelection()
   if (!selection) {
@@ -761,6 +790,25 @@ export const GramadocInput = forwardRef<
     ],
   )
 
+  const insertPlainText = useCallback(
+    (text: string) => {
+      if (!text) {
+        return
+      }
+
+      const normalizedText = normalizePlainTextLineEndings(text)
+      const command =
+        normalizedText.includes('\n') ? 'insertHTML' : 'insertText'
+      const valueArg =
+        command === 'insertHTML'
+          ? plainTextToEditorHtml(normalizedText)
+          : normalizedText
+
+      runEditorCommand(command, valueArg)
+    },
+    [runEditorCommand],
+  )
+
   const applyReplacement = useCallback(
     (replacement: string) => {
       const editor = editorRef.current
@@ -1118,7 +1166,7 @@ export const GramadocInput = forwardRef<
           return
         }
 
-        runEditorCommand('insertText', text)
+        insertPlainText(text)
       },
       toggleBold: () => {
         runEditorCommand('bold')
@@ -1247,6 +1295,7 @@ export const GramadocInput = forwardRef<
       calculateUnderlines,
       captureSelection,
       emitEditorState,
+      insertPlainText,
       runEditorCommand,
       underlines,
       onMatchSelect,
@@ -1287,6 +1336,28 @@ export const GramadocInput = forwardRef<
           closePopup()
           setHoveredMatch(null)
           scheduleEditorSync()
+        }}
+        onPaste={(event) => {
+          if (readOnly) {
+            return
+          }
+
+          const clipboardData = event.clipboardData
+          const html = clipboardData?.getData('text/html').trim() ?? ''
+          const text = clipboardData?.getData('text/plain') ?? ''
+
+          if (!html && !text) {
+            return
+          }
+
+          event.preventDefault()
+
+          if (html) {
+            runEditorCommand('insertHTML', html)
+            return
+          }
+
+          insertPlainText(text)
         }}
         onKeyDown={handleKeyDown}
         onKeyUp={() => {
