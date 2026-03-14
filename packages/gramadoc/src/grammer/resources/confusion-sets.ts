@@ -1373,7 +1373,16 @@ export const homophoneConfusionSets: ContextualConfusionSet[] = [
           },
           {
             relativeTokenIndex: 1,
-            values: ['api', 'build', 'config', 'house', 'plan', 'team'],
+            values: [
+              'api',
+              'build',
+              'config',
+              'home',
+              'homes',
+              'house',
+              'plan',
+              'team',
+            ],
             score: 3,
           },
           {
@@ -1479,7 +1488,20 @@ export const homophoneConfusionSets: ContextualConfusionSet[] = [
       },
       {
         value: 'two',
+        statisticalContexts: [
+          {
+            score: 3,
+            kind: 'collocation-frequency',
+            previousValues: ['are', 'had', 'has', 'have', 'were'],
+            nextPosHints: ['noun'],
+          },
+        ],
         cues: [
+          {
+            relativeTokenIndex: 1,
+            posHints: ['noun'],
+            score: 3,
+          },
           {
             relativeTokenIndex: 1,
             values: ['choices', 'notes', 'options', 'tests'],

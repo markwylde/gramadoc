@@ -1,5 +1,13 @@
 import type { Match } from '../../../../types.js'
 import { hasPosHint } from '../../../linguistics.js'
+import {
+  getBaseVerbCandidate,
+  getBaseVerbCandidateInAuxiliaryContext,
+  getBaseVerbCandidateInInfinitiveContext,
+  getPastParticipleCandidateInPerfectContext,
+  getPastTenseCandidate,
+  toPresentParticiple,
+} from '../../../morphology.js'
 import { analyzeQuotationMarks } from '../../../quotation.js'
 import type {
   GrammerOptionalRulePack,
@@ -7,7 +15,6 @@ import type {
   Token,
 } from '../../../types.js'
 import { createMatch, preserveCase } from '../../../utils.js'
-import { isKnownDictionaryWord } from '../../spelling-orthography/basic-spelling/helpers.js'
 
 const MODAL_OF_WORDS = new Set(['could', 'might', 'must', 'should', 'would'])
 const INFINITIVE_TRIGGER_WORDS = new Set([
@@ -46,62 +53,6 @@ const INFINITIVE_TRIGGER_WORDS = new Set([
   'want',
   'wanted',
 ])
-const IRREGULAR_PAST_PARTICIPLES: Record<string, string> = {
-  ate: 'eaten',
-  did: 'done',
-  saw: 'seen',
-  spoke: 'spoken',
-  took: 'taken',
-  went: 'gone',
-  wrote: 'written',
-}
-const INFINITIVE_IRREGULAR_FORMS: Record<string, string> = {
-  ate: 'eat',
-  came: 'come',
-  did: 'do',
-  drove: 'drive',
-  forgot: 'forget',
-  gone: 'go',
-  ran: 'run',
-  saw: 'see',
-  taken: 'take',
-  took: 'take',
-  went: 'go',
-  written: 'write',
-  wrote: 'write',
-}
-const DO_SUPPORT_PATTERNS: Record<string, Record<string, string>> = {
-  did: {
-    ate: 'eat',
-    came: 'come',
-    did: 'do',
-    drove: 'drive',
-    forgot: 'forget',
-    went: 'go',
-    saw: 'see',
-    took: 'take',
-    wrote: 'write',
-  },
-  do: {
-    does: 'do',
-    goes: 'go',
-    has: 'have',
-    is: 'be',
-    runs: 'run',
-    sees: 'see',
-    takes: 'take',
-    writes: 'write',
-  },
-  does: {
-    goes: 'go',
-    has: 'have',
-    is: 'be',
-    runs: 'run',
-    sees: 'see',
-    takes: 'take',
-    writes: 'write',
-  },
-}
 const DO_SUPPORT_INTERVENING_WORDS = new Set([
   'he',
   'she',
@@ -117,7 +68,35 @@ const DO_SUPPORT_INTERVENING_WORDS = new Set([
   'everyone',
   'who',
 ])
+const DO_SUPPORT_WORDS = new Set([
+  'did',
+  "didn't",
+  'do',
+  "don't",
+  'does',
+  "doesn't",
+])
+const MODAL_BASE_VERB_WORDS = new Set([
+  'can',
+  'could',
+  'may',
+  'might',
+  'must',
+  'should',
+  'will',
+  'would',
+])
 const QUESTION_LEAD_WORDS = new Set(['why'])
+const INTERVENING_ADVERB_WORDS = new Set([
+  'already',
+  'always',
+  'ever',
+  'just',
+  'never',
+  'often',
+  'soon',
+  'still',
+])
 const QUESTION_VERB_FOLLOWERS = new Set([
   'a',
   'an',
@@ -148,14 +127,14 @@ const QUESTION_VERB_FOLLOWERS = new Set([
   'your',
 ])
 const NEEDS_ELLIPSIS_TRIGGERS = new Set(['need', 'needs', 'needed'])
-const NEEDS_ELLIPSIS_PREDICATES = new Set([
-  'changed',
-  'checked',
-  'cleaned',
-  'fixed',
-  'moved',
-  'replaced',
-  'updated',
+const NEEDS_ELLIPSIS_BASE_VERBS = new Set([
+  'change',
+  'check',
+  'clean',
+  'fix',
+  'move',
+  'replace',
+  'update',
 ])
 const REGIONAL_MODAL_WORDS = new Set(['could', 'might', 'should', 'would'])
 const CREATIVE_WRITING_RULE_PACK_PREFIX =
@@ -170,48 +149,6 @@ const SUBJECT_DROP_SUPPRESSED_BLOCK_KINDS = new Set([
 
 function isWhitespaceOnly(text: string, start: number, end: number) {
   return /^\s+$/.test(text.slice(start, end))
-}
-
-function getRegularBaseVerb(candidate: Token) {
-  if (candidate.lemma === candidate.normalized) {
-    return null
-  }
-
-  const value = candidate.normalized
-
-  if (value.length <= 3 || !value.endsWith('ed')) {
-    return null
-  }
-
-  if (/ied$/.test(value) && value.length > 4) {
-    const yStem = `${value.slice(0, -3)}y`
-    if (isKnownDictionaryWord(yStem)) {
-      return yStem
-    }
-
-    const ieStem = value.slice(0, -1)
-    return isKnownDictionaryWord(ieStem) ? ieStem : null
-  }
-
-  if (
-    /([b-df-hj-np-tv-z])\1ed$/.test(value) &&
-    !/(need|seed|feed)ed$/.test(value)
-  ) {
-    const doubledStem = value.slice(0, -3)
-    return isKnownDictionaryWord(doubledStem) ? doubledStem : null
-  }
-
-  const dFormStem = value.slice(0, -1)
-  if (dFormStem.length > 3 && isKnownDictionaryWord(dFormStem)) {
-    return dFormStem
-  }
-
-  const edFormStem = value.slice(0, -2)
-  if (isKnownDictionaryWord(edFormStem)) {
-    return edFormStem
-  }
-
-  return null
 }
 
 function isSentenceLeadToken(text: string, offset: number) {
@@ -248,7 +185,10 @@ function findNextMeaningfulToken(
       return undefined
     }
 
-    if (hasPosHint(token, 'adverb')) {
+    if (
+      hasPosHint(token, 'adverb') ||
+      INTERVENING_ADVERB_WORDS.has(token.normalized)
+    ) {
       continue
     }
 
@@ -291,20 +231,26 @@ function isTokenInsideSuppressedBlockKind(
   return blockKind ? SUBJECT_DROP_SUPPRESSED_BLOCK_KINDS.has(blockKind) : false
 }
 
-function toIngForm(word: string) {
-  if (word === 'cut') {
-    return 'cutting'
+function hasEarlierAuxiliaryOrModalInSentence(
+  tokens: Token[],
+  candidate: Token,
+) {
+  return tokens.some(
+    (token) =>
+      token.sentenceIndex === candidate.sentenceIndex &&
+      token.offset < candidate.offset &&
+      (hasPosHint(token, 'auxiliary') || hasPosHint(token, 'modal')),
+  )
+}
+
+function toIngForm(token: Token) {
+  const base = getBaseVerbCandidate(token) ?? token.morphology.verb.base
+
+  if (!base) {
+    return null
   }
 
-  if (/ied$/u.test(word)) {
-    return `${word.slice(0, -3)}ying`
-  }
-
-  if (/ed$/u.test(word)) {
-    return `${word.slice(0, -2)}ing`
-  }
-
-  return `${word}ing`
+  return toPresentParticiple(base)
 }
 
 function hasCreativeWritingRulePack(
@@ -313,6 +259,56 @@ function hasCreativeWritingRulePack(
   return enabledRulePacks.some((rulePack) =>
     rulePack.startsWith(CREATIVE_WRITING_RULE_PACK_PREFIX),
   )
+}
+
+function getVerbUsageConfidence(candidate: Token): Token['posHintConfidence'] {
+  const confidences = [
+    candidate.posHintConfidence,
+    candidate.morphology.confidence,
+    candidate.morphology.verb.confidence,
+  ]
+
+  if (confidences.includes('low')) {
+    return 'low'
+  }
+
+  if (confidences.includes('medium')) {
+    return 'medium'
+  }
+
+  if (
+    candidate.isPosAmbiguous ||
+    candidate.morphology.isAmbiguous ||
+    candidate.morphology.verb.isAmbiguous
+  ) {
+    return 'medium'
+  }
+
+  return 'high'
+}
+
+function createVerbUsageDiagnostics(options: {
+  leader: Token
+  candidate: Token
+  replacement: string
+  confidenceLabel: Token['posHintConfidence']
+  reason: string
+}) {
+  const { leader, candidate, replacement, confidenceLabel, reason } = options
+
+  return {
+    evidence: [
+      `leader:${leader.normalized}`,
+      `candidate:${candidate.normalized}`,
+      `replacement:${replacement}`,
+      `lemma:${candidate.morphology.lemma}`,
+      `verbForm:${candidate.morphology.verb.form ?? 'unknown'}`,
+      `verbProvenance:${candidate.morphology.verb.provenance ?? 'none'}`,
+      `reason:${reason}`,
+    ],
+    triggerTokens: [leader.normalized, candidate.normalized],
+    annotationConfidence: confidenceLabel,
+  }
 }
 
 export const modalHaveRule: GrammerRule = {
@@ -390,7 +386,7 @@ export const irregularPastParticipleRule: GrammerRule = {
       { text: 'They had wrote the summary before lunch.' },
     ],
   },
-  check({ text, tokens }) {
+  check({ text, tokens, blockRanges }) {
     const matches: Match[] = []
 
     for (let index = 0; index < tokens.length - 1; index += 1) {
@@ -401,13 +397,20 @@ export const irregularPastParticipleRule: GrammerRule = {
         current.sentenceIndex,
       )
       const replacement = next
-        ? IRREGULAR_PAST_PARTICIPLES[next.normalized]
+        ? getPastParticipleCandidateInPerfectContext({
+            leader: current,
+            candidate: next,
+          })
+        : null
+      const perfectConfidenceLabel = next
+        ? getVerbUsageConfidence(next)
         : undefined
 
       if (
         next &&
         replacement &&
-        ['has', 'have', 'had'].includes(current.normalized) &&
+        perfectConfidenceLabel &&
+        perfectConfidenceLabel !== 'low' &&
         /^\s+/u.test(current.trailingText)
       ) {
         matches.push(
@@ -417,10 +420,54 @@ export const irregularPastParticipleRule: GrammerRule = {
             length: next.length,
             message: `Use the past participle "${preserveCase(next.value, replacement)}" after "${current.value}".`,
             replacements: [preserveCase(next.value, replacement)],
+            confidenceLabel: perfectConfidenceLabel,
+            diagnostics: createVerbUsageDiagnostics({
+              leader: current,
+              candidate: next,
+              replacement,
+              confidenceLabel: perfectConfidenceLabel,
+              reason: 'perfect-tense-past-participle',
+            }),
             rule: irregularPastParticipleRule,
           }),
         )
       }
+
+      const previous = tokens[index - 1]
+      const simplePastReplacement = getPastTenseCandidate(current)
+      const simplePastConfidenceLabel = getVerbUsageConfidence(current)
+
+      if (
+        !simplePastReplacement ||
+        simplePastConfidenceLabel === 'low' ||
+        !previous ||
+        !/^\s+$/u.test(previous.trailingText) ||
+        isOffsetInsideQuotedText(text, current.offset) ||
+        isTokenInsideBlockquote(current, blockRanges) ||
+        hasEarlierAuxiliaryOrModalInSentence(tokens, current) ||
+        (!hasPosHint(previous, 'noun') && !hasPosHint(previous, 'pronoun'))
+      ) {
+        continue
+      }
+
+      matches.push(
+        createMatch({
+          text,
+          offset: current.offset,
+          length: current.length,
+          message: `Use the simple past "${preserveCase(current.value, simplePastReplacement)}" here instead of the participle "${current.value}".`,
+          replacements: [preserveCase(current.value, simplePastReplacement)],
+          confidenceLabel: simplePastConfidenceLabel,
+          diagnostics: createVerbUsageDiagnostics({
+            leader: previous,
+            candidate: current,
+            replacement: simplePastReplacement,
+            confidenceLabel: simplePastConfidenceLabel,
+            reason: 'bare-subject-simple-past',
+          }),
+          rule: irregularPastParticipleRule,
+        }),
+      )
     }
 
     return matches
@@ -453,9 +500,8 @@ export const doSupportBaseVerbRule: GrammerRule = {
 
     for (let index = 0; index < tokens.length - 1; index += 1) {
       const current = tokens[index]
-      const pattern = DO_SUPPORT_PATTERNS[current.normalized]
 
-      if (!pattern) {
+      if (!DO_SUPPORT_WORDS.has(current.normalized)) {
         continue
       }
 
@@ -480,9 +526,18 @@ export const doSupportBaseVerbRule: GrammerRule = {
         continue
       }
 
-      const replacement = pattern[candidate.normalized]
+      const replacement = getBaseVerbCandidate(candidate)
+      const contextualReplacement = getBaseVerbCandidateInAuxiliaryContext({
+        leader: current,
+        candidate,
+      })
+      const confidenceLabel = getVerbUsageConfidence(candidate)
 
-      if (!replacement) {
+      if (
+        !replacement ||
+        replacement !== contextualReplacement ||
+        confidenceLabel === 'low'
+      ) {
         continue
       }
 
@@ -493,6 +548,14 @@ export const doSupportBaseVerbRule: GrammerRule = {
           length: candidate.length,
           message: `Use the base verb "${preserveCase(candidate.value, replacement)}" after "${current.value}".`,
           replacements: [preserveCase(candidate.value, replacement)],
+          confidenceLabel,
+          diagnostics: createVerbUsageDiagnostics({
+            leader: current,
+            candidate,
+            replacement,
+            confidenceLabel,
+            reason: 'do-support-base-form',
+          }),
           rule: doSupportBaseVerbRule,
         }),
       )
@@ -523,41 +586,62 @@ export const infinitiveBaseVerbRule: GrammerRule = {
       { text: 'They want to went home early.' },
     ],
   },
-  check({ text, tokens }) {
+  check({ text, tokens, blockRanges }) {
     const matches: Match[] = []
+    const activeBlockRanges = blockRanges
 
-    for (let index = 0; index < tokens.length - 2; index += 1) {
+    for (let index = 0; index < tokens.length - 1; index += 1) {
       const trigger = tokens[index]
       const toToken = tokens[index + 1]
-      const candidate = findNextMeaningfulToken(
+      const infinitiveCandidate = findNextMeaningfulToken(
         tokens,
         index + 2,
         trigger.sentenceIndex,
       )
+      const modalCandidate = findNextMeaningfulToken(
+        tokens,
+        index + 1,
+        trigger.sentenceIndex,
+      )
+      const isModalContext =
+        MODAL_BASE_VERB_WORDS.has(trigger.normalized) ||
+        hasPosHint(trigger, 'modal')
+      const candidate = isModalContext ? modalCandidate : infinitiveCandidate
 
       if (
         !candidate ||
-        !INFINITIVE_TRIGGER_WORDS.has(trigger.normalized) ||
-        toToken.normalized !== 'to' ||
-        !isWhitespaceOnly(
-          text,
-          trigger.offset + trigger.length,
-          toToken.offset,
-        ) ||
-        !isWhitespaceOnly(
-          text,
-          toToken.offset + toToken.length,
-          candidate.offset,
-        )
+        (!isModalContext &&
+          (!INFINITIVE_TRIGGER_WORDS.has(trigger.normalized) ||
+            toToken?.normalized !== 'to' ||
+            !isWhitespaceOnly(
+              text,
+              trigger.offset + trigger.length,
+              toToken.offset,
+            ) ||
+            !isWhitespaceOnly(
+              text,
+              toToken.offset + toToken.length,
+              candidate.offset,
+            ))) ||
+        isOffsetInsideQuotedText(text, trigger.offset) ||
+        isTokenInsideBlockquote(trigger, activeBlockRanges)
       ) {
         continue
       }
 
-      const replacement =
-        INFINITIVE_IRREGULAR_FORMS[candidate.normalized] ??
-        getRegularBaseVerb(candidate)
+      const replacement = isModalContext
+        ? getBaseVerbCandidate(candidate)
+        : getBaseVerbCandidateInInfinitiveContext({
+            leader: toToken,
+            candidate,
+          })
+      const confidenceLabel = getVerbUsageConfidence(candidate)
 
-      if (!replacement || replacement === candidate.normalized) {
+      if (
+        !replacement ||
+        replacement === candidate.normalized ||
+        confidenceLabel === 'low'
+      ) {
         continue
       }
 
@@ -566,8 +650,16 @@ export const infinitiveBaseVerbRule: GrammerRule = {
           text,
           offset: candidate.offset,
           length: candidate.length,
-          message: `Use the base verb "${preserveCase(candidate.value, replacement)}" after "${toToken.value}".`,
+          message: `Use the base verb "${preserveCase(candidate.value, replacement)}" after "${isModalContext ? trigger.value : toToken.value}".`,
           replacements: [preserveCase(candidate.value, replacement)],
+          confidenceLabel,
+          diagnostics: createVerbUsageDiagnostics({
+            leader: isModalContext ? trigger : toToken,
+            candidate,
+            replacement,
+            confidenceLabel,
+            reason: isModalContext ? 'modal-base-form' : 'infinitive-base-form',
+          }),
           rule: infinitiveBaseVerbRule,
         }),
       )
@@ -598,7 +690,7 @@ export const questionLeadBaseVerbRule: GrammerRule = {
       { text: 'Why went home so early?' },
     ],
   },
-  check({ text, tokens }) {
+  check({ text, tokens, blockRanges }) {
     const matches: Match[] = []
 
     for (let index = 0; index < tokens.length - 1; index += 1) {
@@ -621,16 +713,21 @@ export const questionLeadBaseVerbRule: GrammerRule = {
         !QUESTION_LEAD_WORDS.has(lead.normalized) ||
         !lead.isSentenceStart ||
         !isSentenceLeadToken(text, lead.offset) ||
-        !/^\s+/u.test(lead.trailingText)
+        !/^\s+/u.test(lead.trailingText) ||
+        isOffsetInsideQuotedText(text, lead.offset) ||
+        isTokenInsideBlockquote(lead, blockRanges)
       ) {
         continue
       }
 
-      const replacement =
-        INFINITIVE_IRREGULAR_FORMS[candidate.normalized] ??
-        getRegularBaseVerb(candidate)
+      const replacement = getBaseVerbCandidate(candidate)
+      const confidenceLabel = getVerbUsageConfidence(candidate)
 
-      if (!replacement || replacement === candidate.normalized) {
+      if (
+        !replacement ||
+        replacement === candidate.normalized ||
+        confidenceLabel === 'low'
+      ) {
         continue
       }
 
@@ -653,6 +750,14 @@ export const questionLeadBaseVerbRule: GrammerRule = {
           length: candidate.length,
           message: `Use the base verb "${preserveCase(candidate.value, replacement)}" after "${lead.value}".`,
           replacements: [preserveCase(candidate.value, replacement)],
+          confidenceLabel,
+          diagnostics: createVerbUsageDiagnostics({
+            leader: lead,
+            candidate,
+            replacement,
+            confidenceLabel,
+            reason: 'question-lead-base-form',
+          }),
           rule: questionLeadBaseVerbRule,
         }),
       )
@@ -668,7 +773,7 @@ export const needsParticipleEllipsisRule: GrammerRule = {
   description:
     'Flags regional ellipsis patterns like "needs fixed" in ordinary prose and suggests a standard rewrite.',
   shortMessage: 'Grammar',
-  issueType: 'grammar',
+  issueType: 'style',
   category: {
     id: 'VERB_USAGE',
     name: 'Verb Usage',
@@ -686,11 +791,15 @@ export const needsParticipleEllipsisRule: GrammerRule = {
     for (let index = 0; index < tokens.length - 1; index += 1) {
       const trigger = tokens[index]
       const candidate = tokens[index + 1]
+      const ingReplacement = candidate ? toIngForm(candidate) : null
 
       if (
         !NEEDS_ELLIPSIS_TRIGGERS.has(trigger.normalized) ||
         !candidate ||
-        !NEEDS_ELLIPSIS_PREDICATES.has(candidate.normalized) ||
+        !candidate.morphology.verb.canBePastParticiple ||
+        !candidate.morphology.verb.base ||
+        !NEEDS_ELLIPSIS_BASE_VERBS.has(candidate.morphology.verb.base) ||
+        !ingReplacement ||
         !isWhitespaceOnly(
           text,
           trigger.offset + trigger.length,
@@ -711,7 +820,7 @@ export const needsParticipleEllipsisRule: GrammerRule = {
             'Prefer a standard form such as "needs to be fixed" or "needs fixing" here.',
           replacements: [
             `${trigger.value} to be ${candidate.value}`,
-            `${trigger.value} ${toIngForm(candidate.value)}`,
+            `${trigger.value} ${preserveCase(candidate.value, ingReplacement)}`,
           ],
           rule: needsParticipleEllipsisRule,
         }),
@@ -728,7 +837,7 @@ export const usedToModalStackRule: GrammerRule = {
   description:
     'Flags regional double-modal patterns like "used to could" in ordinary prose.',
   shortMessage: 'Grammar',
-  issueType: 'grammar',
+  issueType: 'style',
   category: {
     id: 'VERB_USAGE',
     name: 'Verb Usage',
@@ -787,7 +896,7 @@ export const sentenceInitialSubjectDropRule: GrammerRule = {
   description:
     'Flags narrowly scoped sentence-leading fragments like "Seems like..." or "Appears that..." where standard prose usually supplies an explicit subject.',
   shortMessage: 'Grammar',
-  issueType: 'grammar',
+  issueType: 'style',
   category: {
     id: 'VERB_USAGE',
     name: 'Verb Usage',

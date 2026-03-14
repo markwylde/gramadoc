@@ -188,4 +188,77 @@ describe('demonstrativeMisuseRule', () => {
       ),
     ).toEqual([])
   })
+
+  it('preserves capitalization and suggestion text for plural demonstrative replacements', () => {
+    const matches = runRule(demonstrativeMisuseRule, 'That apples fell.')
+
+    expect(matches).toHaveLength(1)
+    expect(matches[0]).toMatchObject({
+      message: 'Use "Those" with the plural noun "apples".',
+      replacements: [{ value: 'Those' }],
+    })
+  })
+
+  it('does not treat content-clause "that" after reporting verbs as a demonstrative', () => {
+    expect(
+      runRule(
+        demonstrativeMisuseRule,
+        'The guide explained that researchers disagree.',
+      ),
+    ).toEqual([])
+  })
+
+  it(
+    'does not treat content-clause "that" before a plural subject and finite verb as a demonstrative',
+    () => {
+      expect(
+        runRule(
+          demonstrativeMisuseRule,
+          'The guide explained that researchers say the timeline changed.',
+        ),
+      ).toEqual([])
+    },
+  )
+
+  it('does not treat sentence-medial content-clause "that" as a demonstrative before plural subjects', () => {
+    expect(
+      runRule(
+        demonstrativeMisuseRule,
+        'I know that apples fell during the storm.',
+      ),
+    ).toEqual([])
+  })
+
+  it(
+    'does not treat relative-clause "that" before a plural subject and reporting verb as a demonstrative',
+    () => {
+      expect(
+        runRule(
+          demonstrativeMisuseRule,
+          'The findings include burial sites that researchers say could provide new clues.',
+        ),
+      ).toEqual([])
+    },
+  )
+
+  it(
+    'does not treat relative-clause "that" in other noun-antecedent patterns as a demonstrative',
+    () => {
+      expect(
+        runRule(
+          demonstrativeMisuseRule,
+          'We saw artifacts that historians believe belong to traders.',
+        ),
+      ).toEqual([])
+    },
+  )
+
+  it('does not treat sentence-start content clauses as demonstrative misuse', () => {
+    expect(
+      runRule(
+        demonstrativeMisuseRule,
+        'That researchers disagree seems unsurprising.',
+      ),
+    ).toEqual([])
+  })
 })

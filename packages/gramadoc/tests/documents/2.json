@@ -61,5 +61,12 @@
     "length": 5,
     "excerpt": "comes",
     "note": "After the modal \"should\", the base form \"come\" is expected."
+  },
+  {
+    "ruleId": "DEMONSTRATIVE_MISUSE",
+    "offset": 1941,
+    "length": 5,
+    "excerpt": "Those",
+    "note": "Plural demonstrative \"Those\" should not modify the singular noun \"shelter\" here."
   }
 ]

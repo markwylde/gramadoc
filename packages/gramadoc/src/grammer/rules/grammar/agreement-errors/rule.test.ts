@@ -150,6 +150,51 @@ describe('subjectVerbAgreementRule', () => {
     })
   })
 
+  it('recovers agreement mismatches across longer subject phrases and embedded clauses', () => {
+    const matches = runRule(
+      subjectVerbAgreementRule,
+      [
+        'Archaeologists around the world has recently uncovered several remarkable discoveries.',
+        'Many of the coffins appears to belong to priests and officials.',
+        'The chambers contains pottery fragments and tools.',
+        'Still, archaeologists caution that discoveries like these often raises as many questions as it answers.',
+        'A process that can takes years before definitive conclusions are reached.',
+        'The demand for modern offices and apartments are increasing.',
+        'The project was promoted as an innovative solution that include three towers connected by sky bridges.',
+        'Many cities continues to push forward with ambitious construction plans.',
+      ].join(' '),
+    )
+
+    expect(matches).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          replacements: [{ value: 'have' }],
+        }),
+        expect.objectContaining({
+          replacements: [{ value: 'appear' }],
+        }),
+        expect.objectContaining({
+          replacements: [{ value: 'contain' }],
+        }),
+        expect.objectContaining({
+          replacements: [{ value: 'raise' }],
+        }),
+        expect.objectContaining({
+          replacements: [{ value: 'take' }],
+        }),
+        expect.objectContaining({
+          replacements: [{ value: 'is' }],
+        }),
+        expect.objectContaining({
+          replacements: [{ value: 'includes' }],
+        }),
+        expect.objectContaining({
+          replacements: [{ value: 'continue' }],
+        }),
+      ]),
+    )
+  })
+
   it('re-expands to singular local subjects when the bare verb is a clean predicate', () => {
     const matches = runRule(
       subjectVerbAgreementRule,

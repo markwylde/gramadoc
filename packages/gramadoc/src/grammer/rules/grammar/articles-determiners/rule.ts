@@ -1,5 +1,8 @@
+import { hasPosHint, hasStrongPosHint } from '../../../linguistics.js'
+import { isLikelyFiniteVerbMorphology } from '../../../morphology.js'
 import type { Match } from '../../../../types.js'
 import { createPatternRule } from '../../../patterns.js'
+import type { Token } from '../../../types.js'
 import articlePhonetics from '../../../resources/article-phonetics.json' with {
   type: 'json',
 }
@@ -113,34 +116,162 @@ const ARTICLE_TRIGGER_VERBS = new Set([
   'wrote',
 ])
 
-function isPlural(noun: string) {
-  return noun.endsWith('s')
+function hasWhitespaceBridge(text: string, left: Token, right: Token) {
+  return /^\s+$/u.test(text.slice(left.offset + left.length, right.offset))
 }
 
 function isLikelyNoun(value: string) {
   return !NON_NOUN_FOLLOWERS.has(value)
 }
 
-function isLikelyPredicateWord(value: string) {
+function isLikelyPredicateWord(token: Token) {
   return (
-    LIKELY_PREDICATE_WORDS.has(value) ||
-    /ed$/.test(value) ||
-    ['came', 'did', 'forgot', 'ran', 'saw', 'took', 'went', 'wrote'].includes(
-      value,
-    )
+    LIKELY_PREDICATE_WORDS.has(token.normalized) ||
+    isLikelyFiniteVerbMorphology(token)
   )
 }
 
-function isLikelyDemonstrativeNoun(value: string, followingValue?: string) {
-  if (COUNTABLE_NOUNS.has(value) || UNCOUNTABLE_NOUNS.has(value)) {
+function isLikelyHeadNounToken(token: Token) {
+  if (
+    COUNTABLE_NOUNS.has(token.normalized) ||
+    UNCOUNTABLE_NOUNS.has(token.normalized)
+  ) {
     return true
   }
 
-  if (!isLikelyNoun(value) || !followingValue) {
+  if (isLikelyFiniteVerbMorphology(token) && !hasStrongPosHint(token, 'noun')) {
     return false
   }
 
-  return isLikelyPredicateWord(followingValue)
+  return (
+    hasPosHint(token, 'noun') &&
+    !hasPosHint(token, 'verb') &&
+    !hasPosHint(token, 'auxiliary') &&
+    !hasPosHint(token, 'modal') &&
+    !hasPosHint(token, 'determiner') &&
+    !hasPosHint(token, 'preposition')
+  )
+}
+
+function isLikelyDemonstrativeNoun(token: Token, following?: Token) {
+  if (isLikelyHeadNounToken(token)) {
+    return true
+  }
+
+  if (
+    !isLikelyNoun(token.normalized) ||
+    hasPosHint(token, 'verb') ||
+    hasPosHint(token, 'auxiliary') ||
+    hasPosHint(token, 'modal') ||
+    !following
+  ) {
+    return false
+  }
+
+  return isLikelyPredicateWord(following)
+}
+
+function isLikelyClauseSubjectToken(token: Token) {
+  return isLikelyHeadNounToken(token) || hasPosHint(token, 'pronoun')
+}
+
+function isLikelyClausePredicateToken(token: Token) {
+  return (
+    !hasPosHint(token, 'preposition') &&
+    (isLikelyPredicateWord(token) ||
+      hasPosHint(token, 'verb') ||
+      hasPosHint(token, 'auxiliary') ||
+      hasPosHint(token, 'modal'))
+  )
+}
+
+function isLikelyClauseEmbeddingTrigger(token: Token) {
+  return (
+    !hasPosHint(token, 'preposition') &&
+    (hasPosHint(token, 'verb') ||
+      hasPosHint(token, 'auxiliary') ||
+      hasPosHint(token, 'modal') ||
+      isLikelyFiniteVerbMorphology(token))
+  )
+}
+
+function isLikelyClauseAntecedent(token: Token) {
+  return (
+    !hasPosHint(token, 'determiner') &&
+    !hasPosHint(token, 'preposition') &&
+    isLikelyHeadNounToken(token)
+  )
+}
+
+function hasSentenceLevelPredicateAfterThatClause(
+  tokens: Token[],
+  index: number,
+) {
+  const current = tokens[index]
+
+  if (!current) {
+    return false
+  }
+
+  for (let lookahead = index + 3; lookahead < tokens.length; lookahead += 1) {
+    const candidate = tokens[lookahead]
+
+    if (!candidate || candidate.sentenceIndex !== current.sentenceIndex) {
+      break
+    }
+
+    if (isLikelyClausePredicateToken(candidate)) {
+      return true
+    }
+  }
+
+  return false
+}
+
+function isClauseIntroducingThat(
+  tokens: Token[],
+  index: number,
+  text: string,
+): boolean {
+  const current = tokens[index]
+  const previous = tokens[index - 1]
+  const next = tokens[index + 1]
+  const following = tokens[index + 2]
+
+  if (
+    current?.normalized !== 'that' ||
+    !next ||
+    !following ||
+    next.sentenceIndex !== current.sentenceIndex ||
+    following.sentenceIndex !== current.sentenceIndex
+  ) {
+    return false
+  }
+
+  if (!isLikelyClauseSubjectToken(next)) {
+    return false
+  }
+
+  if (current.isSentenceStart) {
+    return hasSentenceLevelPredicateAfterThatClause(tokens, index)
+  }
+
+  if (
+    !previous ||
+    previous.sentenceIndex !== current.sentenceIndex ||
+    !hasWhitespaceBridge(text, previous, current)
+  ) {
+    return false
+  }
+
+  if (isLikelyClauseEmbeddingTrigger(previous)) {
+    return true
+  }
+
+  return (
+    isLikelyClauseAntecedent(previous) &&
+    isLikelyClausePredicateToken(following)
+  )
 }
 
 function getIndefiniteArticle(noun: string) {
@@ -275,7 +406,7 @@ export const missingArticlesRule: GrammerRule = {
       if (
         !ARTICLE_TRIGGER_VERBS.has(previous.normalized) ||
         !COUNTABLE_NOUNS.has(current.normalized) ||
-        isPlural(current.normalized) ||
+        current.isPluralLike ||
         (beforePrevious && DETERMINERS.has(beforePrevious.normalized))
       ) {
         continue
@@ -334,7 +465,7 @@ export const incorrectDeterminersRule: GrammerRule = {
 
       if (
         current.normalized === 'much' &&
-        (COUNTABLE_NOUNS.has(next.normalized) || isPlural(next.normalized))
+        (COUNTABLE_NOUNS.has(next.normalized) || next.isPluralLike)
       ) {
         matches.push(
           createMatch({
@@ -366,7 +497,7 @@ export const incorrectDeterminersRule: GrammerRule = {
 
       if (
         current.normalized === 'less' &&
-        (COUNTABLE_NOUNS.has(next.normalized) || isPlural(next.normalized))
+        (COUNTABLE_NOUNS.has(next.normalized) || next.isPluralLike)
       ) {
         matches.push(
           createMatch({
@@ -442,12 +573,16 @@ export const demonstrativeMisuseRule: GrammerRule = {
         continue
       }
 
-      if (!isLikelyDemonstrativeNoun(next.normalized, following?.normalized)) {
+      if (isClauseIntroducingThat(tokens, index, text)) {
+        continue
+      }
+
+      if (!isLikelyDemonstrativeNoun(next, following)) {
         continue
       }
 
       const nextIsPlural =
-        isPlural(next.normalized) && !UNCOUNTABLE_NOUNS.has(next.normalized)
+        next.isPluralLike && !UNCOUNTABLE_NOUNS.has(next.normalized)
 
       if (
         (current.normalized === 'this' || current.normalized === 'that') &&

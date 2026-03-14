@@ -66,6 +66,19 @@ describe('irregularPastParticipleRule', () => {
       ),
     ).toEqual([])
   })
+
+  it('flags bare irregular participles when a finite past tense is expected', () => {
+    const matches = runRule(
+      irregularPastParticipleRule,
+      'Residents say they seen thick smoke covering the sky.',
+    )
+
+    expect(matches).toHaveLength(1)
+    expect(matches[0]).toMatchObject({
+      message: 'Use the simple past "saw" here instead of the participle "seen".',
+      replacements: [{ value: 'saw' }],
+    })
+  })
 })
 
 describe('doSupportBaseVerbRule', () => {
@@ -97,6 +110,33 @@ describe('doSupportBaseVerbRule', () => {
         'Did she go yesterday? Does he write every morning? Do they go now?',
       ),
     ).toEqual([])
+  })
+
+  it('recovers regular base verbs without relying on a rule-local stemmer', () => {
+    const matches = runRule(
+      doSupportBaseVerbRule,
+      'Did she studied more? Does he agreed too quickly?',
+    )
+
+    expect(matches).toHaveLength(2)
+    expect(matches[0]).toMatchObject({
+      replacements: [{ value: 'study' }],
+    })
+    expect(matches[1]).toMatchObject({
+      replacements: [{ value: 'agree' }],
+    })
+  })
+
+  it('handles contracted do-support forms', () => {
+    const matches = runRule(
+      doSupportBaseVerbRule,
+      "Warnings didn't came early enough.",
+    )
+
+    expect(matches).toHaveLength(1)
+    expect(matches[0]).toMatchObject({
+      replacements: [{ value: 'come' }],
+    })
   })
 })
 
@@ -134,6 +174,43 @@ describe('infinitiveBaseVerbRule', () => {
       ),
     ).toEqual([])
   })
+
+  it('flags modal contexts that still require a base verb', () => {
+    const matches = runRule(
+      infinitiveBaseVerbRule,
+      'Safety should always comes first while crews continue battling the flames.',
+    )
+
+    expect(matches).toHaveLength(1)
+    expect(matches[0]).toMatchObject({
+      replacements: [{ value: 'come' }],
+    })
+  })
+
+  it('stays quiet for ambiguous or quoted examples even when the surface looks non-base', () => {
+    expect(
+      runRule(
+        infinitiveBaseVerbRule,
+        'We need to read the memo. The guide quoted "to agreed" as a learner error.',
+      ),
+    ).toEqual([])
+  })
+
+  it('adds confidence and diagnostics from shared morphology to infinitive matches', () => {
+    const matches = runRule(
+      infinitiveBaseVerbRule,
+      'They hoped to agreed too quickly.',
+    )
+
+    expect(matches).toHaveLength(1)
+    expect(matches[0]).toMatchObject({
+      confidenceLabel: 'high',
+      diagnostics: {
+        annotationConfidence: 'high',
+        triggerTokens: ['to', 'agreed'],
+      },
+    })
+  })
 })
 
 describe('questionLeadBaseVerbRule', () => {
@@ -161,6 +238,33 @@ describe('questionLeadBaseVerbRule', () => {
         'Why walk down the street when you can run? Why go home so early?',
       ),
     ).toEqual([])
+  })
+
+  it('does not flag quoted question fragments that are being discussed', () => {
+    expect(
+      runRule(
+        questionLeadBaseVerbRule,
+        'The handout highlighted "Why went home so early?" as the incorrect version.',
+      ),
+    ).toEqual([])
+  })
+})
+
+describe('verb usage diagnostics', () => {
+  it('adds confidence and diagnostics to irregular participle matches', () => {
+    const matches = runRule(
+      irregularPastParticipleRule,
+      'She has went home already.',
+    )
+
+    expect(matches).toHaveLength(1)
+    expect(matches[0]).toMatchObject({
+      confidenceLabel: 'high',
+      diagnostics: {
+        annotationConfidence: 'high',
+        triggerTokens: ['has', 'went'],
+      },
+    })
   })
 })
 

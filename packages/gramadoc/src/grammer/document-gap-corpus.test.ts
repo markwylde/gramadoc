@@ -10,19 +10,24 @@ type ExpectedDocumentProblem = {
   note: string
 }
 
-const documentIds = ['1', '2', '3'] as const
+const documentIds = ['1', '2', '3', '4'] as const
 
-function readDocumentFile(name: `${(typeof documentIds)[number]}.${'txt' | 'json'}`) {
-  return readFileSync(new URL(`../../tests/documents/${name}`, import.meta.url), 'utf8')
+type DocumentId = (typeof documentIds)[number]
+
+function readDocumentFile(documentId: DocumentId, extension: 'txt' | 'json') {
+  return readFileSync(
+    new URL(`../../tests/documents/${documentId}.${extension}`, import.meta.url),
+    'utf8',
+  )
 }
 
 describe('document gap corpus', () => {
   it.each(documentIds)(
     'catches the curated whole-document gaps in %s.txt',
     (documentId) => {
-      const text = readDocumentFile(`${documentId}.txt`)
+      const text = readDocumentFile(documentId, 'txt')
       const expectedProblems = JSON.parse(
-        readDocumentFile(`${documentId}.json`),
+        readDocumentFile(documentId, 'json'),
       ) as ExpectedDocumentProblem[]
 
       const actualMatches = analyzeText(text).warnings.matches

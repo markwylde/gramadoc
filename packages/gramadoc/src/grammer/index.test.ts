@@ -679,6 +679,17 @@ describe('grammerRules end-to-end corpus', () => {
     expectRulesToMatch(text, expectedRuleIds, 1)
   })
 
+  it('keeps clause-introducing "that" quiet in full analyzer output', () => {
+    const text =
+      'Archaeologists around the world have recently uncovered several remarkable discoveries that are already reshaping how historians understand ancient civilizations. The findings, which were announced over the last few weeks, include artifacts, ruins and burial sites that researchers say could provide new clues about how early societies lived, traded and organized themselves.'
+
+    const demonstrativeMatches = analyzeText(text).filter(
+      (match) => match.rule.id === 'DEMONSTRATIVE_MISUSE',
+    )
+
+    expect(demonstrativeMatches).toEqual([])
+  })
+
   it('keeps optional editorial packs disabled by default', () => {
     const matchedRuleIds = getMatchedRuleIds(
       'There are two issues in the draft, the summary is unclear, and the route covers 5 km.',
