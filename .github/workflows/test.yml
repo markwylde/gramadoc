@@ -29,4 +29,5 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm test
+      - run: pnpm test:release-config
       - run: pnpm test:release-gate

@@ -7,6 +7,7 @@
     "build": "pnpm --filter @markwylde/gramadoc build && pnpm --filter @markwylde/gramadoc-react build && pnpm --filter @markwylde/gramadoc-api build && pnpm --filter @markwylde/gramadoc-demo build",
     "lint": "biome check .",
     "test": "pnpm --filter @markwylde/gramadoc test",
+    "test:release-config": "node --test scripts/release-config.test.mjs",
     "test:differential": "pnpm --filter @markwylde/gramadoc test:differential",
     "test:release-gate": "pnpm --filter @markwylde/gramadoc test:release-gate",
     "format": "biome format --write .",
