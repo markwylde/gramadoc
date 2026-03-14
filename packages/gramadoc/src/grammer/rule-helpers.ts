@@ -1,4 +1,8 @@
 import { hasPosHint, isContentWord } from './linguistics.js'
+import {
+  isLikelyFiniteVerbMorphology,
+  isLikelyPastParticipleMorphology,
+} from './morphology.js'
 import { findPatternMatches } from './patterns.js'
 import type {
   LexicalContextGuard,
@@ -27,30 +31,6 @@ const FINITE_AUXILIARY_WORDS = new Set([
   'is',
   'was',
   'were',
-])
-
-const IRREGULAR_PARTICIPLES = new Set([
-  'been',
-  'built',
-  'done',
-  'driven',
-  'eaten',
-  'found',
-  'given',
-  'gone',
-  'known',
-  'left',
-  'lost',
-  'made',
-  'run',
-  'seen',
-  'sent',
-  'shown',
-  'spoken',
-  'taken',
-  'told',
-  'understood',
-  'written',
 ])
 
 type PhraseGap = 'hyphen' | 'space'
@@ -297,18 +277,11 @@ export function isLikelyFiniteVerb(token: Token) {
     return true
   }
 
-  return (
-    hasPosHint(token, 'verb') &&
-    !hasPosHint(token, 'preposition') &&
-    !/(ing|en)$/u.test(token.normalized)
-  )
+  return hasPosHint(token, 'verb') && isLikelyFiniteVerbMorphology(token)
 }
 
 export function isLikelyPastParticiple(token: Token) {
-  return (
-    IRREGULAR_PARTICIPLES.has(token.normalized) ||
-    /(?:ed|en)$/u.test(token.normalized)
-  )
+  return isLikelyPastParticipleMorphology(token)
 }
 
 export function getOpeningContentTokens(
@@ -455,8 +428,8 @@ export function matchesLexicalContextGuard(
       guard.previousTokenValues,
     ) &&
     matchesContextValues(nextToken?.normalized, guard.nextTokenValues) &&
-    matchesContextValues(previousToken?.lemma, guard.previousLemmas) &&
-    matchesContextValues(nextToken?.lemma, guard.nextLemmas)
+    matchesContextValues(previousToken?.morphology.lemma, guard.previousLemmas) &&
+    matchesContextValues(nextToken?.morphology.lemma, guard.nextLemmas)
   )
 }
 

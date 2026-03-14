@@ -398,7 +398,6 @@ function getAnnotationMetrics(
       lowConfidenceTokenCount: 0,
       ambiguousTokenCount: 0,
       fallbackGuessTokenCount: 0,
-      openClassUnknownTokenCount: 0,
       disambiguatedTokenCount: 0,
     }
   }
@@ -421,10 +420,6 @@ function getAnnotationMetrics(
         metrics.fallbackGuessTokenCount += 1
       }
 
-      if (token.isOpenClassUnknown) {
-        metrics.openClassUnknownTokenCount += 1
-      }
-
       if (token.disambiguationProvenance.length > 0) {
         metrics.disambiguatedTokenCount += 1
       }
@@ -437,7 +432,6 @@ function getAnnotationMetrics(
       lowConfidenceTokenCount: 0,
       ambiguousTokenCount: 0,
       fallbackGuessTokenCount: 0,
-      openClassUnknownTokenCount: 0,
       disambiguatedTokenCount: 0,
     },
   )

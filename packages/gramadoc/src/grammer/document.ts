@@ -256,8 +256,7 @@ export function tokenizeText(
     tokens.push({
       value,
       normalized,
-      lemma: annotation.lemma,
-      lemmaSource: annotation.lemmaSource,
+      morphology: annotation.morphology,
       lexicalPosHints: annotation.lexicalPosHints,
       morphologyPosHints: annotation.morphologyPosHints,
       fallbackPosHints: annotation.fallbackPosHints,
@@ -266,7 +265,6 @@ export function tokenizeText(
       posHints: annotation.posHints,
       posHintConfidence: annotation.posHintConfidence,
       usedFallbackPosGuess: annotation.usedFallbackPosGuess,
-      isOpenClassUnknown: annotation.isOpenClassUnknown,
       isPosAmbiguous: annotation.isPosAmbiguous,
       disambiguationProvenance: [],
       offset,

@@ -4,6 +4,11 @@ import type {
   TokenPosEvidenceSource,
   TokenPosHint,
 } from './types.js'
+import {
+  isLikelyPastParticipleMorphology,
+  isLikelyVerbInAuxiliaryContext,
+  isLikelyVerbInInfinitiveContext,
+} from './morphology.js'
 
 const SUBJECT_STARTER_HINTS = new Set<TokenPosHint>([
   'determiner',
@@ -164,7 +169,7 @@ function disambiguateBePredicate(tokens: Token[], index: number) {
   if (
     !token ||
     !previous ||
-    (previous.lemma !== 'be' &&
+    (previous.morphology.lemma !== 'be' &&
       !CONTRACTED_BE_FORMS.has(previous.normalized)) ||
     (!BE_AUXILIARY_FORMS.has(previous.normalized) &&
       !CONTRACTED_BE_FORMS.has(previous.normalized)) ||
@@ -196,7 +201,7 @@ function disambiguateBeParticiplePredicate(tokens: Token[], index: number) {
   if (
     !token ||
     !previous ||
-    (previous.lemma !== 'be' &&
+    (previous.morphology.lemma !== 'be' &&
       !CONTRACTED_BE_FORMS.has(previous.normalized)) ||
     (!BE_AUXILIARY_FORMS.has(previous.normalized) &&
       !CONTRACTED_BE_FORMS.has(previous.normalized)) ||
@@ -205,13 +210,7 @@ function disambiguateBeParticiplePredicate(tokens: Token[], index: number) {
     return
   }
 
-  if (
-    !token.normalized.endsWith('ed') &&
-    !token.normalized.endsWith('ing') &&
-    !['broken', 'configured', 'done', 'enabled', 'failing', 'stuck'].includes(
-      token.normalized,
-    )
-  ) {
+  if (!isLikelyPastParticipleMorphology(token)) {
     return
   }
 
@@ -231,7 +230,10 @@ function disambiguateModalOrAuxiliaryVerb(tokens: Token[], index: number) {
     !token ||
     !previous ||
     !canResolveTo(token, 'verb') ||
-    !previous.posHints.some((hint) => hint === 'auxiliary' || hint === 'modal')
+    !isLikelyVerbInAuxiliaryContext({
+      leader: previous,
+      candidate: token,
+    })
   ) {
     return
   }
@@ -246,8 +248,11 @@ function disambiguateToVerb(tokens: Token[], index: number) {
   if (
     !token ||
     !previous ||
-    previous.normalized !== 'to' ||
-    !canResolveTo(token, 'verb')
+    !canResolveTo(token, 'verb') ||
+    !isLikelyVerbInInfinitiveContext({
+      leader: previous,
+      candidate: token,
+    })
   ) {
     return
   }
@@ -280,7 +285,7 @@ function disambiguateSubjectVerbS(tokens: Token[], index: number) {
   if (
     !token ||
     !previous ||
-    !token.normalized.endsWith('s') ||
+    !token.morphology.verb.canBeThirdPersonSingular ||
     !SAFE_SINGULAR_VERB_FORMS.has(token.normalized) ||
     !canResolveTo(token, 'verb') ||
     !hasAnyHint(previous, SUBJECT_STARTER_HINTS) ||

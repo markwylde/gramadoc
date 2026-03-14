@@ -1,4 +1,10 @@
 import { hasPosHint } from './linguistics.js'
+import {
+  isLikelyVerbInAuxiliaryContext,
+  isLikelyFiniteVerbMorphology,
+  isLikelyVerbInInfinitiveContext,
+  isLikelyPastParticipleMorphology,
+} from './morphology.js'
 import type { ClausePart, ClauseRange, SentenceRange, Token } from './types.js'
 
 const FINITE_AUXILIARY_WORDS = new Set([
@@ -32,13 +38,13 @@ const CLAUSE_COORDINATORS = new Set(['and', 'but', 'or'])
 
 const STRONG_CLAUSE_BOUNDARY_REGEX = /(?:--|—|[;:()[\]{}])/u
 const COMMA_BOUNDARY_REGEX = /,\s*$/u
-const PARTICIPLE_ENDING_REGEX = /(ed|en)$/u
-
 function isFiniteVerbCandidate(token: Token) {
   return (
     FINITE_AUXILIARY_WORDS.has(token.normalized) ||
     hasPosHint(token, 'modal') ||
-    (hasPosHint(token, 'verb') && !hasPosHint(token, 'preposition'))
+    (hasPosHint(token, 'verb') &&
+      !hasPosHint(token, 'preposition') &&
+      isLikelyFiniteVerbMorphology(token))
   )
 }
 
@@ -49,9 +55,8 @@ function isLikelyFiniteSFormVerb(
 ) {
   if (
     !token ||
+    !token.morphology.verb.canBeThirdPersonSingular ||
     !/^[a-z]+$/u.test(token.normalized) ||
-    !token.normalized.endsWith('s') ||
-    /ss$/u.test(token.normalized) ||
     hasPosHint(token, 'preposition') ||
     !previous ||
     !next
@@ -104,7 +109,7 @@ function isAuxiliaryLeadingIntoMainVerb(tokens: Token[], index: number) {
     return false
   }
 
-  return hasPosHint(next, 'verb') && !hasPosHint(next, 'preposition')
+  return isLikelyVerbInAuxiliaryContext({ leader: token, candidate: next })
 }
 
 function isLikelyPostNominalModifier(tokens: Token[], index: number) {
@@ -115,7 +120,7 @@ function isLikelyPostNominalModifier(tokens: Token[], index: number) {
   if (
     !token ||
     !previous ||
-    !PARTICIPLE_ENDING_REGEX.test(token.normalized) ||
+    !isLikelyPastParticipleMorphology(token) ||
     !hasPosHint(previous, 'noun') ||
     !hasPosHint(token, 'verb')
   ) {
@@ -170,7 +175,10 @@ function getPredicateCandidateScore(tokens: Token[], index: number) {
     score += 2
   }
 
-  if (previous?.normalized === 'to') {
+  if (
+    previous &&
+    isLikelyVerbInInfinitiveContext({ leader: previous, candidate: token })
+  ) {
     score -= 4
   }
 
@@ -327,7 +335,10 @@ function findPredicateIndex(tokens: Token[]) {
     if (
       firstToken?.normalized === 'to' &&
       infinitiveHead &&
-      isVerbLikeToken(infinitiveHead)
+      isLikelyVerbInInfinitiveContext({
+        leader: firstToken,
+        candidate: infinitiveHead,
+      })
     ) {
       return 1
     }

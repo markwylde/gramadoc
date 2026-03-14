@@ -10,7 +10,31 @@ function stripLightweightAnnotation(
 ): RuleCheckContext {
   const strippedTokens = context.tokens.map((token) => ({
     ...token,
-    lemma: token.normalized,
+    morphology: {
+      ...token.morphology,
+      lemma: token.normalized,
+      lemmaAlternates: [],
+      provenance: 'identity' as const,
+      confidence: 'low' as const,
+      isAmbiguous: false,
+      ambiguityTags: [],
+      verb: {
+        ...token.morphology.verb,
+        isCandidate: false,
+        form: null,
+        base: null,
+        candidates: [],
+        provenance: null,
+        confidence: 'low' as const,
+        isAmbiguous: false,
+        isNonBaseForm: false,
+        canBeBase: false,
+        canBeThirdPersonSingular: false,
+        canBePast: false,
+        canBePastParticiple: false,
+        canBePresentParticiple: false,
+      },
+    },
     posHints: ['noun'] as const,
     lexicalPosHints: ['noun'] as const,
     morphologyPosHints: [] as const,
@@ -23,7 +47,6 @@ function stripLightweightAnnotation(
         confidence: 'high' as const,
       },
     ],
-    isOpenClassUnknown: false,
     disambiguationProvenance: [],
   })) as RuleCheckContext['tokens']
   const tokenByIndex = new Map(
@@ -58,7 +81,7 @@ describe('lightweight annotation lift', () => {
 
     expect(well.lexicalPosHints).toContain('adverb')
     expect(well.fallbackPosHints).toEqual([])
-    expect(well.isOpenClassUnknown).toBe(false)
+    expect(well.usedFallbackPosGuess).toBe(false)
     expect(well.posReadings).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -87,7 +110,7 @@ describe('lightweight annotation lift', () => {
     expect(performs.isPosAmbiguous).toBe(true)
 
     expect(frobnicator.fallbackPosHints).toEqual(['noun'])
-    expect(frobnicator.isOpenClassUnknown).toBe(true)
+    expect(frobnicator.usedFallbackPosGuess).toBe(true)
     expect(frobnicator.posReadings).toEqual([
       {
         pos: 'noun',
@@ -107,53 +130,87 @@ describe('lightweight annotation lift', () => {
     const youll = getTokenAnnotation("you'll")
     const shouldve = getTokenAnnotation("should've")
 
+    expect(cant).not.toHaveProperty('lemma')
     expect(cant).toMatchObject({
-      lemma: 'can',
+      morphology: { lemma: 'can' },
       lexicalPosHints: expect.arrayContaining(['modal', 'verb']),
       fallbackPosHints: [],
       posHintConfidence: 'high',
     })
     expect(dont).toMatchObject({
-      lemma: 'do',
+      morphology: { lemma: 'do' },
       lexicalPosHints: expect.arrayContaining(['auxiliary', 'verb']),
       fallbackPosHints: [],
       posHintConfidence: 'high',
     })
     expect(wont).toMatchObject({
-      lemma: 'will',
+      morphology: { lemma: 'will' },
       lexicalPosHints: expect.arrayContaining(['modal', 'verb']),
       fallbackPosHints: [],
       posHintConfidence: 'high',
     })
     expect(im).toMatchObject({
-      lemma: 'be',
+      morphology: { lemma: 'be' },
       lexicalPosHints: expect.arrayContaining(['auxiliary', 'verb']),
       fallbackPosHints: [],
       posHintConfidence: 'high',
     })
     expect(were).toMatchObject({
-      lemma: 'be',
+      morphology: { lemma: 'be' },
       lexicalPosHints: expect.arrayContaining(['auxiliary', 'verb']),
       fallbackPosHints: [],
       posHintConfidence: 'high',
     })
     expect(shouldnt).toMatchObject({
-      lemma: 'should',
+      morphology: { lemma: 'should' },
       lexicalPosHints: expect.arrayContaining(['modal', 'verb']),
       fallbackPosHints: [],
       posHintConfidence: 'high',
     })
     expect(youll).toMatchObject({
-      lemma: 'will',
+      morphology: { lemma: 'will' },
       lexicalPosHints: expect.arrayContaining(['modal', 'verb']),
       fallbackPosHints: [],
       posHintConfidence: 'high',
     })
     expect(shouldve).toMatchObject({
-      lemma: 'should',
+      morphology: { lemma: 'should' },
       lexicalPosHints: expect.arrayContaining(['modal', 'verb']),
       fallbackPosHints: [],
       posHintConfidence: 'high',
+    })
+  })
+
+  it('exposes structured morphology provenance, form, and ambiguity', () => {
+    const agreed = getTokenAnnotation('agreed')
+    const studied = getTokenAnnotation('studied')
+    const read = getTokenAnnotation('read')
+    const need = getTokenAnnotation('need')
+
+    expect(agreed.morphology).toMatchObject({
+      lemma: 'agree',
+      provenance: 'regular',
+      verb: {
+        form: 'past',
+        base: 'agree',
+        canBePast: true,
+        canBePastParticiple: true,
+      },
+    })
+    expect(studied.morphology.verb.base).toBe('study')
+    expect(read.morphology).toMatchObject({
+      lemma: 'read',
+      provenance: 'ambiguous',
+      isAmbiguous: true,
+    })
+    expect(need.morphology).toMatchObject({
+      lemma: 'need',
+      provenance: 'identity',
+      verb: {
+        form: 'base',
+        base: 'need',
+        canBeBase: true,
+      },
     })
   })
 
@@ -251,6 +308,21 @@ describe('lightweight annotation lift', () => {
     )
     expect(glips?.posHints).toEqual(['noun'])
     expect(glips?.usedFallbackPosGuess).toBe(false)
+  })
+
+  it('uses the shared infinitive context to promote verbs after infinitival to without promoting nouns after prepositional to', () => {
+    const context = buildRuleCheckContext(
+      'We plan to agree soon and walked to market yesterday.',
+    )
+
+    const agree = context.tokens.find((token) => token.normalized === 'agree')
+    const market = context.tokens.find((token) => token.normalized === 'market')
+
+    expect(agree).not.toHaveProperty('lemma')
+    expect(agree?.posHints).toContain('verb')
+    expect(agree?.disambiguationProvenance).toContain('to-plus-verb')
+    expect(market?.posHints).toContain('noun')
+    expect(market?.disambiguationProvenance).not.toContain('to-plus-verb')
   })
 
   it('recovers verb signals after additional contracted modals', () => {

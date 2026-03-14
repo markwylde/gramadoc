@@ -1,4 +1,5 @@
 import { hasPosHint, isContentWord } from '../../../linguistics.js'
+import { isLikelyPastParticipleMorphology } from '../../../morphology.js'
 import { nounStackAllowedPhrases } from '../../../resources/noun-stacks.js'
 import { technicalAllowlist } from '../../../resources/technical-allowlist.js'
 import {
@@ -34,9 +35,6 @@ const PASSIVE_AUXILIARIES = new Set([
   'get',
   'gets',
   'got',
-  'had',
-  'has',
-  'have',
   'is',
   'was',
   'were',
@@ -603,7 +601,7 @@ export const passiveVoiceRule: GrammerRule = {
 
         if (
           !PASSIVE_AUXILIARIES.has(auxiliary.normalized) ||
-          !/ed$/u.test(participle.normalized) ||
+          !isLikelyPastParticipleMorphology(participle) ||
           ADJECTIVAL_PARTICIPLES.has(participle.normalized) ||
           !/^\s+$/u.test(auxiliary.trailingText)
         ) {

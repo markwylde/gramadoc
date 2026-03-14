@@ -116,9 +116,11 @@ function isAllowedStyleRepetitionToken(
   token: Token,
   bucket: StyleRepetitionPosBucket,
 ) {
+  const lemma = token.morphology.lemma
+
   if (
     token.isCapitalized ||
-    token.lemma.length < STYLE_REPETITION_THRESHOLDS[bucket].minimumLength ||
+    lemma.length < STYLE_REPETITION_THRESHOLDS[bucket].minimumLength ||
     isTechnicalTerm(token)
   ) {
     return false
@@ -144,15 +146,15 @@ function isAllowedStyleRepetitionToken(
         return false
       }
 
-      return !LOW_SIGNAL_VERBS.has(token.lemma)
+      return !LOW_SIGNAL_VERBS.has(lemma)
     case 'noun':
-      return !LOW_SIGNAL_NOUNS.has(token.lemma)
+      return !LOW_SIGNAL_NOUNS.has(lemma)
     case 'adjective':
       if (token.isPosAmbiguous) {
         return false
       }
 
-      return !LOW_SIGNAL_ADJECTIVES.has(token.lemma)
+      return !LOW_SIGNAL_ADJECTIVES.has(lemma)
   }
 }
 
@@ -169,6 +171,8 @@ function getStyleRepetitionMatches(options: {
   const thresholds = STYLE_REPETITION_THRESHOLDS[bucket]
 
   for (const token of tokens) {
+    const lemma = token.morphology.lemma
+
     if (
       getStyleRepetitionPosBucket(token) !== bucket ||
       !isAllowedStyleRepetitionToken(token, bucket)
@@ -176,14 +180,14 @@ function getStyleRepetitionMatches(options: {
       continue
     }
 
-    const existing = counts.get(token.lemma)
+    const existing = counts.get(lemma)
 
     if (existing) {
       existing.count += 1
       continue
     }
 
-    counts.set(token.lemma, {
+    counts.set(lemma, {
       count: 1,
       firstToken: token,
     })

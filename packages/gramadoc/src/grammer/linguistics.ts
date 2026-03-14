@@ -1,12 +1,20 @@
 import type {
   AnnotationConfidence,
-  LemmaSource,
   StyleRepetitionPosBucket,
   Token,
   TokenPosEvidenceSource,
   TokenPosHint,
   TokenPosReading,
 } from './types.js'
+import {
+  analyzeTokenMorphology,
+  CONTRACTION_ANNOTATIONS,
+  getPreferredLemma,
+  isLikelyVerbDerivation,
+  KNOWN_BASE_VERBS,
+  PARTICIPIAL_ADJECTIVES,
+  S_FORM_MORPHOLOGY_BLOCKLIST,
+} from './morphology.js'
 
 const ADJECTIVES = new Set([
   'alive',
@@ -47,16 +55,6 @@ const ADJECTIVES = new Set([
   'well',
   'welcome',
   'wrong',
-])
-const PARTICIPIAL_ADJECTIVES = new Set([
-  'broken',
-  'configured',
-  'disabled',
-  'done',
-  'enabled',
-  'failing',
-  'finished',
-  'stuck',
 ])
 const ADVERBS = new Set([
   'already',
@@ -180,144 +178,6 @@ const PRONOUNS = new Set([
   'you',
   'yourself',
 ])
-const VERBS = new Set([
-  'accept',
-  'affect',
-  'agree',
-  'analyze',
-  'approve',
-  'arrive',
-  'begin',
-  'build',
-  'care',
-  'change',
-  'check',
-  'clarify',
-  'close',
-  'deploy',
-  'discuss',
-  'depend',
-  'effect',
-  'explain',
-  'finish',
-  'fix',
-  'go',
-  'help',
-  'improve',
-  'involve',
-  'join',
-  'keep',
-  'know',
-  'launch',
-  'leave',
-  'listen',
-  'live',
-  'make',
-  'miss',
-  'need',
-  'note',
-  'organize',
-  'participate',
-  'plan',
-  'perform',
-  'practice',
-  'practise',
-  'publish',
-  'read',
-  'remind',
-  'return',
-  'round',
-  'run',
-  'scale',
-  'seem',
-  'ship',
-  'stand',
-  'support',
-  'try',
-  'use',
-  'walk',
-  'work',
-  'wrap',
-  'write',
-])
-const CONTRACTION_ANNOTATIONS: Record<
-  string,
-  {
-    lemma: string
-    hints: TokenPosHint[]
-  }
-> = {
-  "aren't": { lemma: 'be', hints: ['auxiliary', 'verb'] },
-  "can't": { lemma: 'can', hints: ['modal', 'verb'] },
-  "could've": { lemma: 'could', hints: ['modal', 'verb'] },
-  "couldn't": { lemma: 'could', hints: ['modal', 'verb'] },
-  "didn't": { lemma: 'do', hints: ['auxiliary', 'verb'] },
-  "doesn't": { lemma: 'do', hints: ['auxiliary', 'verb'] },
-  "don't": { lemma: 'do', hints: ['auxiliary', 'verb'] },
-  "hasn't": { lemma: 'have', hints: ['auxiliary', 'verb'] },
-  "haven't": { lemma: 'have', hints: ['auxiliary', 'verb'] },
-  "hadn't": { lemma: 'have', hints: ['auxiliary', 'verb'] },
-  "he's": { lemma: 'be', hints: ['auxiliary', 'verb'] },
-  "he'll": { lemma: 'will', hints: ['modal', 'verb'] },
-  "how's": { lemma: 'be', hints: ['auxiliary', 'verb'] },
-  "i'm": { lemma: 'be', hints: ['auxiliary', 'verb'] },
-  "i'll": { lemma: 'will', hints: ['modal', 'verb'] },
-  "i've": { lemma: 'have', hints: ['auxiliary', 'verb'] },
-  "isn't": { lemma: 'be', hints: ['auxiliary', 'verb'] },
-  "it'll": { lemma: 'will', hints: ['modal', 'verb'] },
-  "it's": { lemma: 'be', hints: ['auxiliary', 'verb'] },
-  "let's": { lemma: 'let', hints: ['verb'] },
-  "might've": { lemma: 'might', hints: ['modal', 'verb'] },
-  "mightn't": { lemma: 'might', hints: ['modal', 'verb'] },
-  "must've": { lemma: 'must', hints: ['modal', 'verb'] },
-  "mustn't": { lemma: 'must', hints: ['modal', 'verb'] },
-  "needn't": { lemma: 'need', hints: ['modal', 'verb'] },
-  "shan't": { lemma: 'shall', hints: ['modal', 'verb'] },
-  "she's": { lemma: 'be', hints: ['auxiliary', 'verb'] },
-  "she'll": { lemma: 'will', hints: ['modal', 'verb'] },
-  "should've": { lemma: 'should', hints: ['modal', 'verb'] },
-  "shouldn't": { lemma: 'should', hints: ['modal', 'verb'] },
-  "that's": { lemma: 'be', hints: ['auxiliary', 'verb'] },
-  "that'll": { lemma: 'will', hints: ['modal', 'verb'] },
-  "there's": { lemma: 'be', hints: ['auxiliary', 'verb'] },
-  "there'll": { lemma: 'will', hints: ['modal', 'verb'] },
-  "they'll": { lemma: 'will', hints: ['modal', 'verb'] },
-  "they're": { lemma: 'be', hints: ['auxiliary', 'verb'] },
-  "they've": { lemma: 'have', hints: ['auxiliary', 'verb'] },
-  "wasn't": { lemma: 'be', hints: ['auxiliary', 'verb'] },
-  "we'll": { lemma: 'will', hints: ['modal', 'verb'] },
-  "we're": { lemma: 'be', hints: ['auxiliary', 'verb'] },
-  "we've": { lemma: 'have', hints: ['auxiliary', 'verb'] },
-  "weren't": { lemma: 'be', hints: ['auxiliary', 'verb'] },
-  "when's": { lemma: 'be', hints: ['auxiliary', 'verb'] },
-  "what's": { lemma: 'be', hints: ['auxiliary', 'verb'] },
-  "where's": { lemma: 'be', hints: ['auxiliary', 'verb'] },
-  "who'll": { lemma: 'will', hints: ['modal', 'verb'] },
-  "who's": { lemma: 'be', hints: ['auxiliary', 'verb'] },
-  "why's": { lemma: 'be', hints: ['auxiliary', 'verb'] },
-  "won't": { lemma: 'will', hints: ['modal', 'verb'] },
-  "would've": { lemma: 'would', hints: ['modal', 'verb'] },
-  "wouldn't": { lemma: 'would', hints: ['modal', 'verb'] },
-  "you'll": { lemma: 'will', hints: ['modal', 'verb'] },
-  "you're": { lemma: 'be', hints: ['auxiliary', 'verb'] },
-  "you've": { lemma: 'have', hints: ['auxiliary', 'verb'] },
-}
-const IRREGULAR_LEMMAS: Record<string, string> = {
-  am: 'be',
-  are: 'be',
-  been: 'be',
-  did: 'do',
-  does: 'do',
-  gone: 'go',
-  had: 'have',
-  has: 'have',
-  is: 'be',
-  was: 'be',
-  were: 'be',
-  went: 'go',
-  wrote: 'write',
-  written: 'write',
-}
 const PLURAL_PRONOUNS = new Set([
   'they',
   'them',
@@ -345,8 +205,7 @@ const SINGULAR_PRONOUNS = new Set([
   'that',
   'this',
 ])
-const SINGULAR_NOUN_EXCEPTIONS = new Set(['analysis', 'news'])
-const S_FORM_MORPHOLOGY_BLOCKLIST = new Set([
+const SINGULAR_NOUN_EXCEPTIONS = new Set([
   'analysis',
   'news',
   'series',
@@ -361,8 +220,7 @@ const OPEN_CLASS_HINTS = new Set<TokenPosHint>([
 ])
 
 interface TokenAnnotation {
-  lemma: string
-  lemmaSource: LemmaSource
+  morphology: Token['morphology']
   lexicalPosHints: TokenPosHint[]
   morphologyPosHints: TokenPosHint[]
   fallbackPosHints: TokenPosHint[]
@@ -370,7 +228,6 @@ interface TokenAnnotation {
   posHints: TokenPosHint[]
   posHintConfidence: AnnotationConfidence
   usedFallbackPosGuess: boolean
-  isOpenClassUnknown: boolean
   isPosAmbiguous: boolean
 }
 
@@ -441,35 +298,8 @@ function buildPosReadings(options: {
   })
 }
 
-function isLikelyVerbDerivation(normalized: string) {
-  return (
-    /(?:ize|ise|ify)$/u.test(normalized) ||
-    (normalized.length > 5 && /ate$/u.test(normalized))
-  )
-}
-
-function isLikelyThirdPersonSingularSForm(normalized: string) {
-  if (
-    !/^[a-z]+$/u.test(normalized) ||
-    !normalized.endsWith('s') ||
-    normalized.length <= 3 ||
-    /(?:ss|us|is)$/u.test(normalized) ||
-    S_FORM_MORPHOLOGY_BLOCKLIST.has(normalized)
-  ) {
-    return false
-  }
-
-  const base =
-    normalized.endsWith('ies') && normalized.length > 4
-      ? `${normalized.slice(0, -3)}y`
-      : /(ches|shes|sses|xes|zes|oes)$/u.test(normalized)
-        ? normalized.slice(0, -2)
-        : normalized.slice(0, -1)
-
-  return VERBS.has(base) || isLikelyVerbDerivation(base)
-}
-
 function getMorphologyHints(normalized: string) {
+  const morphology = analyzeTokenMorphology(normalized)
   const hints: TokenPosHint[] = []
 
   if (/(ly)$/u.test(normalized)) {
@@ -484,11 +314,20 @@ function getMorphologyHints(normalized: string) {
     hints.push('noun')
   }
 
-  if (/(ing|ed)$/u.test(normalized) || isLikelyVerbDerivation(normalized)) {
-    hints.push('verb')
-  }
+  const hasStrongVerbLemma =
+    KNOWN_BASE_VERBS.has(morphology.lemma) ||
+    isLikelyVerbDerivation(morphology.lemma) ||
+    morphology.provenance === 'irregular' ||
+    morphology.provenance === 'contraction'
 
-  if (isLikelyThirdPersonSingularSForm(normalized)) {
+  if (
+    morphology.verb.isCandidate &&
+    (morphology.verb.canBePast ||
+      morphology.verb.canBePastParticiple ||
+      morphology.verb.canBePresentParticiple ||
+      (morphology.verb.canBeBase && hasStrongVerbLemma) ||
+      (morphology.verb.canBeThirdPersonSingular && hasStrongVerbLemma))
+  ) {
     hints.push('verb')
   }
 
@@ -505,56 +344,15 @@ function getMorphologyHints(normalized: string) {
 }
 
 export function getLemma(normalized: string) {
-  if (IRREGULAR_LEMMAS[normalized]) {
-    return IRREGULAR_LEMMAS[normalized]
-  }
-
-  if (normalized.endsWith('ies') && normalized.length > 4) {
-    return `${normalized.slice(0, -3)}y`
-  }
-
-  if (normalized.endsWith('ing') && normalized.length > 5) {
-    return normalized.slice(0, -3)
-  }
-
-  if (normalized.endsWith('ed') && normalized.length > 4) {
-    return normalized.slice(0, -2)
-  }
-
-  if (
-    normalized.endsWith('s') &&
-    normalized.length > 3 &&
-    !normalized.endsWith('ss')
-  ) {
-    return normalized.slice(0, -1)
-  }
-
-  return normalized
+  return getPreferredLemma(normalized)
 }
 
 export function getLemmaAnnotation(normalized: string) {
-  if (CONTRACTION_ANNOTATIONS[normalized]) {
-    return {
-      lemma: CONTRACTION_ANNOTATIONS[normalized].lemma,
-      source: 'irregular' as const,
-    }
-  }
-
-  if (IRREGULAR_LEMMAS[normalized]) {
-    return {
-      lemma: IRREGULAR_LEMMAS[normalized],
-      source: 'irregular' as const,
-    }
-  }
-
-  const heuristicLemma = getLemma(normalized)
+  const morphology = analyzeTokenMorphology(normalized)
 
   return {
-    lemma: heuristicLemma,
-    source:
-      heuristicLemma === normalized
-        ? ('identity' as const)
-        : ('heuristic' as const),
+    lemma: morphology.lemma,
+    source: morphology.provenance,
   }
 }
 
@@ -607,6 +405,7 @@ export function getTokenAnnotation(normalized: string): TokenAnnotation {
   let usedOpenClassLexicon = false
   const morphologyPosHints: TokenPosHint[] = []
   const contractionAnnotation = CONTRACTION_ANNOTATIONS[normalized]
+  const morphology = analyzeTokenMorphology(normalized)
 
   if (contractionAnnotation) {
     lexicalPosHints.push(...contractionAnnotation.hints)
@@ -659,9 +458,10 @@ export function getTokenAnnotation(normalized: string): TokenAnnotation {
     usedOpenClassLexicon = true
   }
 
-  const lemmaAnnotation = getLemmaAnnotation(normalized)
-
-  if (VERBS.has(normalized) || VERBS.has(lemmaAnnotation.lemma)) {
+  if (
+    KNOWN_BASE_VERBS.has(normalized) ||
+    KNOWN_BASE_VERBS.has(morphology.lemma)
+  ) {
     lexicalPosHints.push('verb')
     usedOpenClassLexicon = true
   }
@@ -698,8 +498,7 @@ export function getTokenAnnotation(normalized: string): TokenAnnotation {
   })
 
   return {
-    lemma: lemmaAnnotation.lemma,
-    lemmaSource: lemmaAnnotation.source,
+    morphology,
     lexicalPosHints: dedupedLexicalPosHints,
     morphologyPosHints: dedupedMorphologyPosHints,
     fallbackPosHints,
@@ -713,7 +512,6 @@ export function getTokenAnnotation(normalized: string): TokenAnnotation {
       usedFallbackPosGuess,
     }),
     usedFallbackPosGuess,
-    isOpenClassUnknown: usedFallbackPosGuess,
     isPosAmbiguous: openClassHints.length > 1,
   }
 }
@@ -798,7 +596,8 @@ export function getStyleRepetitionPosBucket(
 
   if (
     hasPosHint(token, 'verb') &&
-    (VERBS.has(token.lemma) || /(ed|ing)$/u.test(token.normalized))
+    (KNOWN_BASE_VERBS.has(token.morphology.lemma) ||
+      token.morphology.verb.isCandidate)
   ) {
     return 'verb'
   }

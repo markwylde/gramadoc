@@ -31,7 +31,7 @@ function gerund(options?: { capture?: string }) {
     capture: options?.capture,
     test: (candidate) =>
       candidate.posHints.includes('verb') ||
-      candidate.lemma !== candidate.normalized,
+      candidate.morphology.verb.canBePresentParticiple,
   } satisfies PatternStep
 }
 
