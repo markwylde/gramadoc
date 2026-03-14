@@ -103,6 +103,27 @@ describe('subjectVerbAgreementRule', () => {
     ).toEqual([])
   })
 
+  it('does not let earlier plural subjects leak into embedded existential there-clauses', () => {
+    expect(
+      runRule(
+        subjectVerbAgreementRule,
+        "Commenting on Iran's ballistic missile programme, she said the past 14 days have shown there is no world in which countries can safely coexist with Iran while it has those capabilities.",
+      ),
+    ).toEqual([])
+  })
+
+  it('keeps embedded existential there-clauses quiet across varied earlier plural contexts', () => {
+    const texts = [
+      'Recent talks have made clear there is no route to peace without compromise.',
+      'The last two weeks have shown there are no easy answers for negotiators.',
+      'Months of review have confirmed there is no evidence of tampering in the logs.',
+    ]
+
+    for (const text of texts) {
+      expect(runRule(subjectVerbAgreementRule, text), text).toEqual([])
+    }
+  })
+
   it('does not treat sentence-initial frequency adverbs as singular subjects', () => {
     expect(
       runRule(subjectVerbAgreementRule, 'Sometimes I think that I can fly.'),
@@ -523,5 +544,39 @@ describe('thereIsAreAgreementRule', () => {
         'There is news to share. There are news to share.',
       ),
     ).toHaveLength(1)
+  })
+
+  it('resolves the existential noun head instead of trusting the first post-verb token', () => {
+    const matches = runRule(
+      thereIsAreAgreementRule,
+      'There is no worlds left to map. There are no world left to map. There are no worlds left to map.',
+    )
+
+    expect(matches).toHaveLength(2)
+    expect(matches[0]).toMatchObject({
+      message: 'Use "are" in this "there is" construction.',
+      replacements: [{ value: 'are' }],
+    })
+    expect(matches[1]).toMatchObject({
+      message: 'Use "is" in this "there are" construction.',
+      replacements: [{ value: 'is' }],
+    })
+  })
+
+  it('handles embedded quantifiers and modified noun heads in existential constructions', () => {
+    const matches = runRule(
+      thereIsAreAgreementRule,
+      'There is no signs of damage. There are no evidence of tampering. There is another path forward. There are two workable options.',
+    )
+
+    expect(matches).toHaveLength(2)
+    expect(matches[0]).toMatchObject({
+      message: 'Use "are" in this "there is" construction.',
+      replacements: [{ value: 'are' }],
+    })
+    expect(matches[1]).toMatchObject({
+      message: 'Use "is" in this "there are" construction.',
+      replacements: [{ value: 'is' }],
+    })
   })
 })

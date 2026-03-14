@@ -175,6 +175,21 @@ const PLURAL_CUES = new Set(['few', 'many', 'multiple', 'several', 'two'])
 const SINGULAR_DETERMINERS = new Set(['a', 'an', 'one', 'this', 'that'])
 const SINGULAR_INVARIANT_NOUNS = new Set(['news', 'series', 'species'])
 const SUBJECT_SCAN_ADVERBS = new Set(['often'])
+const EXISTENTIAL_THERE_SKIP_WORDS = new Set([
+  'all',
+  'another',
+  'any',
+  'enough',
+  'more',
+  'most',
+  'no',
+  'some',
+  'such',
+  'the',
+  'these',
+  'this',
+  'those',
+])
 const AGREEMENT_CONFIDENCE_RANK = {
   low: 0,
   medium: 1,
@@ -809,6 +824,109 @@ function getLocalSubjectInfo(tokensInClause: Token[], verb: Token) {
       allowVerbBackedHead: true,
     },
   )
+}
+
+function getExistentialThereHead(
+  tokens: Token[],
+  verbIndex: number,
+): SubjectInfo | null {
+  const thereToken = tokens[verbIndex - 1]
+  const verbToken = tokens[verbIndex]
+
+  if (
+    !thereToken ||
+    !verbToken ||
+    thereToken.normalized !== 'there' ||
+    !['is', 'are'].includes(verbToken.normalized) ||
+    thereToken.sentenceIndex !== verbToken.sentenceIndex ||
+    !/^\s+$/u.test(thereToken.trailingText) ||
+    !/^\s+$/u.test(verbToken.trailingText)
+  ) {
+    return null
+  }
+
+  let cueNumber: SubjectInfo['number'] | null = null
+
+  for (let index = verbIndex + 1; index < tokens.length; index += 1) {
+    const token = tokens[index]
+    const previous = tokens[index - 1]
+
+    if (
+      token.sentenceIndex !== verbToken.sentenceIndex ||
+      token.clauseIndex !== verbToken.clauseIndex
+    ) {
+      break
+    }
+
+    if (!previous || !/^\s+$/u.test(previous.trailingText)) {
+      break
+    }
+
+    if (token.leadingText && /[,:;()[\]{}]/u.test(token.leadingText)) {
+      break
+    }
+
+    if (
+      RELATIVE_CLAUSE_BREAKS.has(token.normalized) ||
+      hasPosHint(token, 'preposition') ||
+      hasPosHint(token, 'verb') ||
+      hasPosHint(token, 'auxiliary') ||
+      hasPosHint(token, 'modal')
+    ) {
+      break
+    }
+
+    if (
+      token.isNumberLike &&
+      token.normalized !== 'one' &&
+      token.normalized !== '1'
+    ) {
+      cueNumber = 'plural'
+      continue
+    }
+
+    if (PLURAL_CUES.has(token.normalized)) {
+      cueNumber = 'plural'
+      continue
+    }
+
+    if (SINGULAR_DETERMINERS.has(token.normalized)) {
+      cueNumber = 'singular'
+      continue
+    }
+
+    if (
+      EXISTENTIAL_THERE_SKIP_WORDS.has(token.normalized) ||
+      hasPosHint(token, 'determiner') ||
+      hasPosHint(token, 'adjective') ||
+      hasPosHint(token, 'adverb')
+    ) {
+      continue
+    }
+
+    if (isNominalSubjectToken(token) || hasPosHint(token, 'noun')) {
+      return {
+        token,
+        number: cueNumber ?? getResolvedSubjectNumber(token),
+      }
+    }
+
+    break
+  }
+
+  return null
+}
+
+function getExistentialThereHeadForVerb(tokensInClause: Token[], verb: Token) {
+  const verbIndex = tokensInClause.findIndex(
+    (candidate) => candidate.index === verb.index,
+  )
+
+  if (verbIndex < 1) {
+    return null
+  }
+
+  return getExistentialThereHead(tokensInClause, verbIndex)
 }
 
 function getSentenceFallbackSubjectTokens(
@@ -1790,6 +1908,10 @@ export const subjectVerbAgreementRule: GrammerRule = {
         continue
       }
 
+      if (forms && getExistentialThereHeadForVerb(clauseTokens, verb)) {
+        continue
+      }
+
       if (shouldSkipExplicitSubject(verb, clauseTokens, localSubjectTokens)) {
         continue
       }
@@ -2067,30 +2189,17 @@ export const thereIsAreAgreementRule: GrammerRule = {
     for (let index = 0; index < tokens.length - 2; index += 1) {
       const thereToken = tokens[index]
       const verbToken = tokens[index + 1]
-      const nounToken = tokens[index + 2]
+      const existentialHead = getExistentialThereHead(tokens, index + 1)
 
       if (
         thereToken.normalized !== 'there' ||
         !['is', 'are'].includes(verbToken.normalized) ||
-        !/^\s+$/u.test(thereToken.trailingText) ||
-        !/^\s+$/u.test(verbToken.trailingText)
+        !existentialHead
       ) {
         continue
       }
 
-      let expectedVerb = 'is'
-
-      if (PLURAL_CUES.has(nounToken.normalized) || nounToken.isPluralLike) {
-        expectedVerb = 'are'
-      }
-
-      if (
-        SINGULAR_DETERMINERS.has(nounToken.normalized) &&
-        tokens[index + 3] &&
-        /^\s+$/u.test(nounToken.trailingText)
-      ) {
-        expectedVerb = 'is'
-      }
+      const expectedVerb = existentialHead.number === 'plural' ? 'are' : 'is'
 
       if (verbToken.normalized === expectedVerb) {
         continue
