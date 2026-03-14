@@ -104,10 +104,10 @@ describe('infinitiveBaseVerbRule', () => {
   it('flags regular and irregular verb forms after infinitive "to"', () => {
     const matches = runRule(
       infinitiveBaseVerbRule,
-      'Sometimes I like to walked to the shops. They want to went home early. We tried to studied more.',
+      'Sometimes I like to walked to the shops. They want to went home early. We tried to studied more. They hoped to agreed too quickly.',
     )
 
-    expect(matches).toHaveLength(3)
+    expect(matches).toHaveLength(4)
     expect(matches[0]).toMatchObject({
       message: 'Use the base verb "walk" after "to".',
       replacements: [{ value: 'walk' }],
@@ -120,13 +120,17 @@ describe('infinitiveBaseVerbRule', () => {
       message: 'Use the base verb "study" after "to".',
       replacements: [{ value: 'study' }],
     })
+    expect(matches[3]).toMatchObject({
+      message: 'Use the base verb "agree" after "to".',
+      replacements: [{ value: 'agree' }],
+    })
   })
 
   it('does not flag correct infinitives or prepositional "to" phrases', () => {
     expect(
       runRule(
         infinitiveBaseVerbRule,
-        'Sometimes I like to walk to the shops. We drove to London yesterday.',
+        'Sometimes I like to walk to the shops. We drove to London yesterday. Sometimes I think that I need to want to need to do the right thing.',
       ),
     ).toEqual([])
   })

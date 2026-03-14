@@ -1,0 +1,72 @@
+[
+  {
+    "ruleId": "SUBJECT_VERB_AGREEMENT",
+    "offset": 32,
+    "length": 3,
+    "excerpt": "has",
+    "note": "Plural subject \"Archaeologists\" should pair with \"have\"."
+  },
+  {
+    "ruleId": "SUBJECT_VERB_AGREEMENT",
+    "offset": 128,
+    "length": 11,
+    "excerpt": "understands",
+    "note": "Plural subject \"historians\" should pair with \"understand\"."
+  },
+  {
+    "ruleId": "SUBJECT_VERB_AGREEMENT",
+    "offset": 222,
+    "length": 8,
+    "excerpt": "includes",
+    "note": "Plural subject \"findings\" should pair with \"include\"."
+  },
+  {
+    "ruleId": "SUBJECT_VERB_AGREEMENT",
+    "offset": 652,
+    "length": 4,
+    "excerpt": "says",
+    "note": "Plural subject \"Experts\" should pair with \"say\"."
+  },
+  {
+    "ruleId": "SUBJECT_VERB_AGREEMENT",
+    "offset": 962,
+    "length": 7,
+    "excerpt": "appears",
+    "note": "Plural subject \"coffins\" should pair with \"appear\"."
+  },
+  {
+    "ruleId": "SUBJECT_VERB_AGREEMENT",
+    "offset": 1924,
+    "length": 8,
+    "excerpt": "contains",
+    "note": "Plural subject \"chambers\" should pair with \"contain\"."
+  },
+  {
+    "ruleId": "SUBJECT_VERB_AGREEMENT",
+    "offset": 2128,
+    "length": 10,
+    "excerpt": "highlights",
+    "note": "Plural subject \"discoveries\" should pair with \"highlight\"."
+  },
+  {
+    "ruleId": "SUBJECT_VERB_AGREEMENT",
+    "offset": 2407,
+    "length": 8,
+    "excerpt": "believes",
+    "note": "Plural subject \"researchers\" should pair with \"believe\"."
+  },
+  {
+    "ruleId": "SUBJECT_VERB_AGREEMENT",
+    "offset": 2589,
+    "length": 6,
+    "excerpt": "raises",
+    "note": "Plural subject \"discoveries\" should pair with \"raise\"."
+  },
+  {
+    "ruleId": "SUBJECT_VERB_AGREEMENT",
+    "offset": 2699,
+    "length": 5,
+    "excerpt": "takes",
+    "note": "A modal verb should be followed by the base form \"take\"."
+  }
+]

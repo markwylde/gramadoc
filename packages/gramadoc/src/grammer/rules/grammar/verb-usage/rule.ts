@@ -7,6 +7,7 @@ import type {
   Token,
 } from '../../../types.js'
 import { createMatch, preserveCase } from '../../../utils.js'
+import { isKnownDictionaryWord } from '../../spelling-orthography/basic-spelling/helpers.js'
 
 const MODAL_OF_WORDS = new Set(['could', 'might', 'must', 'should', 'would'])
 const INFINITIVE_TRIGGER_WORDS = new Set([
@@ -171,24 +172,43 @@ function isWhitespaceOnly(text: string, start: number, end: number) {
   return /^\s+$/.test(text.slice(start, end))
 }
 
-function getRegularBaseVerb(candidate: string) {
-  if (candidate.length <= 3 || !candidate.endsWith('ed')) {
+function getRegularBaseVerb(candidate: Token) {
+  if (candidate.lemma === candidate.normalized) {
     return null
   }
 
-  if (/ied$/.test(candidate) && candidate.length > 4) {
-    return `${candidate.slice(0, -3)}y`
+  const value = candidate.normalized
+
+  if (value.length <= 3 || !value.endsWith('ed')) {
+    return null
+  }
+
+  if (/ied$/.test(value) && value.length > 4) {
+    const yStem = `${value.slice(0, -3)}y`
+    if (isKnownDictionaryWord(yStem)) {
+      return yStem
+    }
+
+    const ieStem = value.slice(0, -1)
+    return isKnownDictionaryWord(ieStem) ? ieStem : null
   }
 
   if (
-    /([b-df-hj-np-tv-z])\1ed$/.test(candidate) &&
-    !/(need|seed|feed)ed$/.test(candidate)
+    /([b-df-hj-np-tv-z])\1ed$/.test(value) &&
+    !/(need|seed|feed)ed$/.test(value)
   ) {
-    return candidate.slice(0, -3)
+    const doubledStem = value.slice(0, -3)
+    return isKnownDictionaryWord(doubledStem) ? doubledStem : null
   }
 
-  if (candidate.endsWith('ed')) {
-    return candidate.slice(0, -2)
+  const dFormStem = value.slice(0, -1)
+  if (dFormStem.length > 3 && isKnownDictionaryWord(dFormStem)) {
+    return dFormStem
+  }
+
+  const edFormStem = value.slice(0, -2)
+  if (isKnownDictionaryWord(edFormStem)) {
+    return edFormStem
   }
 
   return null
@@ -535,7 +555,7 @@ export const infinitiveBaseVerbRule: GrammerRule = {
 
       const replacement =
         INFINITIVE_IRREGULAR_FORMS[candidate.normalized] ??
-        getRegularBaseVerb(candidate.normalized)
+        getRegularBaseVerb(candidate)
 
       if (!replacement || replacement === candidate.normalized) {
         continue
@@ -608,7 +628,7 @@ export const questionLeadBaseVerbRule: GrammerRule = {
 
       const replacement =
         INFINITIVE_IRREGULAR_FORMS[candidate.normalized] ??
-        getRegularBaseVerb(candidate.normalized)
+        getRegularBaseVerb(candidate)
 
       if (!replacement || replacement === candidate.normalized) {
         continue
