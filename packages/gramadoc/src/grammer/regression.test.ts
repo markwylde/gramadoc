@@ -139,6 +139,23 @@ describe('false-positive corpus', () => {
     }
   })
 
+  it('keeps agreement quiet on sentence-initial adverbials followed by content clauses', () => {
+    const texts = [
+      'Sometimes I think that I can fly.',
+      'Sometimes I think that I need to want to need to do the right thing.',
+      'Usually we think that we can ship safely.',
+      'Today I think that we can ship safely.',
+    ]
+
+    for (const text of texts) {
+      const agreementMatches = analyzeText(text).warnings.matches.filter(
+        (match) => match.rule.id === 'SUBJECT_VERB_AGREEMENT',
+      )
+
+      expect(agreementMatches, text).toEqual([])
+    }
+  })
+
   it('keeps optional editorial packs off unless explicitly enabled', () => {
     const matches = analyzeText(
       'There are two issues in the draft, and the release is unclear.',

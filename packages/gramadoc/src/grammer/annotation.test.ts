@@ -214,6 +214,22 @@ describe('lightweight annotation lift', () => {
     })
   })
 
+  it('keeps sentence-initial frequency adverbs lexical and leaves modal followers verbal', () => {
+    const sometimes = getTokenAnnotation('sometimes')
+    const context = buildRuleCheckContext('Sometimes I think that I can fly.')
+    const fly = context.tokens.find((token) => token.normalized === 'fly')
+
+    expect(sometimes.lexicalPosHints).toContain('adverb')
+    expect(sometimes.fallbackPosHints).toEqual([])
+    expect(sometimes.usedFallbackPosGuess).toBe(false)
+    expect(sometimes.morphologyPosHints).not.toContain('noun')
+    expect(
+      sometimes.posReadings.find((reading) => reading.pos === 'adverb')
+        ?.sources,
+    ).toContain('open-class-lexicon')
+    expect(fly?.posHints).not.toContain('adverb')
+  })
+
   it('still improves confusion ranking on annotation-sensitive fixtures', () => {
     const thanThenSet = contextualConfusionSets.find(
       (set) => set.id === 'THAN_THEN',

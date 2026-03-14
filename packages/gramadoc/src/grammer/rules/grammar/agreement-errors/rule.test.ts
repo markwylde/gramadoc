@@ -103,6 +103,15 @@ describe('subjectVerbAgreementRule', () => {
     ).toEqual([])
   })
 
+  it('does not treat sentence-initial frequency adverbs as singular subjects', () => {
+    expect(
+      runRule(
+        subjectVerbAgreementRule,
+        'Sometimes I think that I can fly.',
+      ),
+    ).toEqual([])
+  })
+
   it('does not treat prepositional objects or infinitive markers as subjects', () => {
     expect(
       runRule(
@@ -195,6 +204,15 @@ describe('subjectVerbAgreementRule', () => {
     )
   })
 
+  it('keeps clean matrix-plus-content-clause sentences quiet when shared clause subjects are sufficient', () => {
+    expect(
+      runRule(
+        subjectVerbAgreementRule,
+        'Sometimes the team thinks that the plan works. I know that the engineers agree on the fix.',
+      ),
+    ).toEqual([])
+  })
+
   it('re-expands to singular local subjects when the bare verb is a clean predicate', () => {
     const matches = runRule(
       subjectVerbAgreementRule,
@@ -222,6 +240,29 @@ describe('subjectVerbAgreementRule', () => {
       message: 'Use "makes" with "One".',
       replacements: [{ value: 'makes' }],
     })
+  })
+
+  it('keeps bounded local recovery for bare-verb partitives while staying quiet on the correct pair', () => {
+    const mismatchMatches = runRule(
+      subjectVerbAgreementRule,
+      'One of the changes make sense.',
+    )
+
+    expect(mismatchMatches).toHaveLength(1)
+    expect(mismatchMatches[0]).toMatchObject({
+      message: 'Use "makes" with "One".',
+      replacements: [{ value: 'makes' }],
+    })
+    expect(mismatchMatches[0]?.diagnostics?.evidence).toContain(
+      'subject:local:one:singular',
+    )
+
+    expect(
+      runRule(
+        subjectVerbAgreementRule,
+        'One of the changes makes sense.',
+      ),
+    ).toEqual([])
   })
 
   it('stays quiet on coordinated sentences where the local singular subject matches', () => {
@@ -307,11 +348,36 @@ describe('subjectVerbAgreementRule', () => {
     })
   })
 
+  it('prefers shared clause subjects for simple finite-form agreement when local expansion is not needed', () => {
+    const matches = runRule(
+      subjectVerbAgreementRule,
+      'Reports was confusing.',
+    )
+
+    expect(matches).toHaveLength(1)
+    expect(matches[0]).toMatchObject({
+      message: 'Use "were" with "Reports".',
+      replacements: [{ value: 'were' }],
+    })
+    expect(matches[0]?.diagnostics?.evidence).toContain(
+      'subject:clause:reports:plural',
+    )
+  })
+
   it('does not flag was/were agreement on multi-word proper names', () => {
     expect(
       runRule(
         subjectVerbAgreementRule,
         'Sun Microsystems was a familiar name. Bell Labs was highly influential.',
+      ),
+    ).toEqual([])
+  })
+
+  it('does not treat capitalized lead-ins followed by pronouns as proper-name subjects', () => {
+    expect(
+      runRule(
+        subjectVerbAgreementRule,
+        'Today I think that we can ship. Tomorrow I think that I can leave.',
       ),
     ).toEqual([])
   })
@@ -352,6 +418,65 @@ describe('subjectVerbAgreementRule', () => {
     expect(matches[0]).toMatchObject({
       message: 'Use "are" with "reports".',
       replacements: [{ value: 'are' }],
+    })
+  })
+
+  it('still catches agreement errors inside clean that-clauses', () => {
+    const matches = runRule(
+      subjectVerbAgreementRule,
+      'I know that the engineers agrees on the fix.',
+    )
+
+    expect(matches).toHaveLength(1)
+    expect(matches[0]).toMatchObject({
+      message: 'Use "agree" with "engineers".',
+      replacements: [{ value: 'agree' }],
+    })
+  })
+
+  it('still catches plural lexical heads inside determiner-led noun phrases', () => {
+    const matches = runRule(
+      subjectVerbAgreementRule,
+      'The patch notes explains the fix.',
+    )
+
+    expect(matches).toHaveLength(1)
+    expect(matches[0]).toMatchObject({
+      message: 'Use "explain" with "notes".',
+      replacements: [{ value: 'explain' }],
+    })
+  })
+
+  it('reuses sentence fallback when a coordinated clause starts mid-sentence', () => {
+    const matches = runRule(
+      subjectVerbAgreementRule,
+      'Architects says that the demand for modern offices and apartments are increasing.',
+    )
+
+    expect(matches).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          message: 'Use "say" with "Architects".',
+          replacements: [{ value: 'say' }],
+        }),
+        expect.objectContaining({
+          message: 'Use "is" with "demand".',
+          replacements: [{ value: 'is' }],
+        }),
+      ]),
+    )
+  })
+
+  it('uses the relative-clause antecedent as the subject of embedded predicates', () => {
+    const matches = runRule(
+      subjectVerbAgreementRule,
+      'One example comes from a recently opened residential complex that include three towers connected by sky bridges.',
+    )
+
+    expect(matches).toHaveLength(1)
+    expect(matches[0]).toMatchObject({
+      message: 'Use "includes" with "complex".',
+      replacements: [{ value: 'includes' }],
     })
   })
 
