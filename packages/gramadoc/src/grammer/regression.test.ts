@@ -100,6 +100,10 @@ const falsePositiveCorpus = [
   'Sometimes I think that I need to want to need to do the right thing.',
   'We drove to London yesterday and want to walk home later.',
   'The transcript quoted "Why went home so early?" as an example sentence.',
+  "Commenting on Iran's ballistic missile programme, she said the past 14 days have shown there is no world in which countries can safely coexist with Iran while it has those capabilities.",
+  'Recent talks have made clear there is no route to peace without compromise.',
+  'The last two weeks have shown there are no easy answers for negotiators.',
+  'Months of review have confirmed there is no evidence of tampering in the logs.',
 ]
 
 describe('benchmark corpus', () => {
