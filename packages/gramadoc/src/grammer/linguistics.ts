@@ -65,10 +65,12 @@ const ADVERBS = new Set([
   'directly',
   'early',
   'fast',
+  'frequently',
   'hard',
   'just',
   'likely',
   'mainly',
+  'occasionally',
   'only',
   'probably',
   'quickly',
@@ -77,6 +79,8 @@ const ADVERBS = new Set([
   'round',
   'safely',
   'still',
+  'sometimes',
+  'usually',
   'very',
   'well',
 ])
@@ -302,7 +306,7 @@ function getMorphologyHints(normalized: string) {
   const morphology = analyzeTokenMorphology(normalized)
   const hints: TokenPosHint[] = []
 
-  if (/(ly)$/u.test(normalized)) {
+  if (normalized.length > 4 && /(ly)$/u.test(normalized)) {
     hints.push('adverb')
   }
 
@@ -334,6 +338,7 @@ function getMorphologyHints(normalized: string) {
   if (
     normalized.endsWith('s') &&
     normalized.length > 3 &&
+    !ADVERBS.has(normalized) &&
     !/(ss|us|is)$/u.test(normalized) &&
     !S_FORM_MORPHOLOGY_BLOCKLIST.has(normalized)
   ) {

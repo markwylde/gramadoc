@@ -126,6 +126,11 @@ The gate currently checks:
 - risky-rule false-positive rate on the shared precision fixtures
 - risky-rule recall on the explicitly labeled risky positives
 
+For syntax-sensitive correctness rules, also track unsafe rewrites separately
+from ordinary false positives. A noisy suggestion is bad; a confident rewrite
+based on weak subject or clause evidence is worse and should get its own
+reviewed fixtures.
+
 The thresholds default to strict values and can be overridden with:
 
 - `GRAMADOC_RELEASE_GATE_RISKY_FP_RATE`

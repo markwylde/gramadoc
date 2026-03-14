@@ -92,4 +92,40 @@ describe('clause metadata', () => {
       getClausePredicateTokens(makesClause).map((token) => token.value),
     ).toEqual(['update', 'makes', 'it', 'worse'])
   })
+
+  it('splits matrix predicates from content clauses introduced by that', () => {
+    const context = buildRuleCheckContext('Sometimes I think that I can fly.')
+
+    expect(context.clauseRanges.map((clause) => clause.text)).toEqual([
+      'Sometimes I think',
+      'that I can fly',
+    ])
+    expect(
+      context.tokens.map((token) => `${token.value}:${token.clausePart}`),
+    ).toEqual([
+      'Sometimes:lead',
+      'I:subject',
+      'think:predicate',
+      'that:lead',
+      'I:subject',
+      'can:predicate',
+      'fly:predicate',
+    ])
+  })
+
+  it('keeps sentence-start content clauses on the shared clause path', () => {
+    const context = buildRuleCheckContext(
+      'That researchers disagree seems unsurprising.',
+    )
+
+    expect(
+      context.tokens.map((token) => `${token.value}:${token.clausePart}`),
+    ).toEqual([
+      'That:lead',
+      'researchers:subject',
+      'disagree:subject',
+      'seems:predicate',
+      'unsurprising:predicate',
+    ])
+  })
 })

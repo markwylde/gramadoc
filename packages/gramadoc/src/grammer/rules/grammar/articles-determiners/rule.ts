@@ -1,4 +1,5 @@
 import type { Match } from '../../../../types.js'
+import { isClauseIntroducingThat as isSharedClauseIntroducingThat } from '../../../content-clauses.js'
 import { hasPosHint, hasStrongPosHint } from '../../../linguistics.js'
 import { isLikelyFiniteVerbMorphology } from '../../../morphology.js'
 import { createPatternRule } from '../../../patterns.js'
@@ -170,61 +171,13 @@ function isLikelyDemonstrativeNoun(token: Token, following?: Token) {
   return isLikelyPredicateWord(following)
 }
 
-function isLikelyClauseSubjectToken(token: Token) {
-  return isLikelyHeadNounToken(token) || hasPosHint(token, 'pronoun')
-}
-
-function isLikelyClausePredicateToken(token: Token) {
+function isLikelyClauseAntecedent(token: Token | undefined) {
   return (
-    !hasPosHint(token, 'preposition') &&
-    (isLikelyPredicateWord(token) ||
-      hasPosHint(token, 'verb') ||
-      hasPosHint(token, 'auxiliary') ||
-      hasPosHint(token, 'modal'))
-  )
-}
-
-function isLikelyClauseEmbeddingTrigger(token: Token) {
-  return (
-    !hasPosHint(token, 'preposition') &&
-    (hasPosHint(token, 'verb') ||
-      hasPosHint(token, 'auxiliary') ||
-      hasPosHint(token, 'modal') ||
-      isLikelyFiniteVerbMorphology(token))
-  )
-}
-
-function isLikelyClauseAntecedent(token: Token) {
-  return (
+    !!token &&
     !hasPosHint(token, 'determiner') &&
     !hasPosHint(token, 'preposition') &&
     isLikelyHeadNounToken(token)
   )
-}
-
-function hasSentenceLevelPredicateAfterThatClause(
-  tokens: Token[],
-  index: number,
-) {
-  const current = tokens[index]
-
-  if (!current) {
-    return false
-  }
-
-  for (let lookahead = index + 3; lookahead < tokens.length; lookahead += 1) {
-    const candidate = tokens[lookahead]
-
-    if (!candidate || candidate.sentenceIndex !== current.sentenceIndex) {
-      break
-    }
-
-    if (isLikelyClausePredicateToken(candidate)) {
-      return true
-    }
-  }
-
-  return false
 }
 
 function isClauseIntroducingThat(
@@ -232,45 +185,12 @@ function isClauseIntroducingThat(
   index: number,
   text: string,
 ): boolean {
-  const current = tokens[index]
-  const previous = tokens[index - 1]
-  const next = tokens[index + 1]
-  const following = tokens[index + 2]
-
-  if (
-    current?.normalized !== 'that' ||
-    !next ||
-    !following ||
-    next.sentenceIndex !== current.sentenceIndex ||
-    following.sentenceIndex !== current.sentenceIndex
-  ) {
-    return false
-  }
-
-  if (!isLikelyClauseSubjectToken(next)) {
-    return false
-  }
-
-  if (current.isSentenceStart) {
-    return hasSentenceLevelPredicateAfterThatClause(tokens, index)
-  }
-
-  if (
-    !previous ||
-    previous.sentenceIndex !== current.sentenceIndex ||
-    !hasWhitespaceBridge(text, previous, current)
-  ) {
-    return false
-  }
-
-  if (isLikelyClauseEmbeddingTrigger(previous)) {
-    return true
-  }
-
-  return (
-    isLikelyClauseAntecedent(previous) &&
-    isLikelyClausePredicateToken(following)
-  )
+  return isSharedClauseIntroducingThat(tokens, index, {
+    predicateWords: LIKELY_PREDICATE_WORDS,
+    isLikelyAntecedent: isLikelyClauseAntecedent,
+    hasWhitespaceBridge: (left, right) =>
+      hasWhitespaceBridge(text, left, right),
+  })
 }
 
 function getIndefiniteArticle(noun: string) {

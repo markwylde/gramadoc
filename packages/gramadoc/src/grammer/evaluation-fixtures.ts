@@ -283,6 +283,15 @@ export const highPriorityGapFalsePositiveFixtures: FalsePositiveFixture[] = [
     rootCause: 'phrase-boundary',
     riskTier: 'risky',
   },
+  {
+    family:
+      'agreement sentence-initial lead-ins and content clauses stay quiet',
+    text: 'Sometimes I think that I can fly. Sometimes I think that I need to want to need to do the right thing. Today I think that we can ship safely. Tomorrow I think that I can leave.',
+    riskyRuleIds: ['SUBJECT_VERB_AGREEMENT'],
+    classification: 'correctness',
+    rootCause: 'disambiguation',
+    riskTier: 'risky',
+  },
 ]
 
 export const evaluationRecallFixtures = highPriorityGapEvaluationFixtures.map(

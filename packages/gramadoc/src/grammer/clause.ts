@@ -1,3 +1,7 @@
+import {
+  isLikelyContentClauseSubjectToken,
+  isClauseIntroducingThat as isSharedClauseIntroducingThat,
+} from './content-clauses.js'
 import { hasPosHint } from './linguistics.js'
 import {
   isLikelyFiniteVerbMorphology,
@@ -38,6 +42,26 @@ const CLAUSE_COORDINATORS = new Set(['and', 'but', 'or'])
 
 const STRONG_CLAUSE_BOUNDARY_REGEX = /(?:--|—|[;:()[\]{}])/u
 const COMMA_BOUNDARY_REGEX = /,\s*$/u
+
+function isClauseIntroducingThat(tokens: Token[], index: number) {
+  return isSharedClauseIntroducingThat(tokens, index)
+}
+
+function isLeadingContentClauseThat(tokens: Token[], index: number) {
+  const token = tokens[index]
+  const next = tokens[index + 1]
+
+  if (token?.normalized !== 'that' || index !== 0 || !next) {
+    return false
+  }
+
+  if (token.isSentenceStart) {
+    return isClauseIntroducingThat(tokens, index)
+  }
+
+  return isLikelyContentClauseSubjectToken(next)
+}
+
 function isFiniteVerbCandidate(token: Token) {
   return (
     FINITE_AUXILIARY_WORDS.has(token.normalized) ||
@@ -85,6 +109,17 @@ function isSubjectStarter(token: Token) {
     hasPosHint(token, 'noun') ||
     hasPosHint(token, 'pronoun')
   )
+}
+
+function isLeadingAdverbial(tokens: Token[], index: number) {
+  const token = tokens[index]
+  const next = tokens[index + 1]
+
+  if (!token || !next || index !== 0 || !hasPosHint(token, 'adverb')) {
+    return false
+  }
+
+  return hasPosHint(next, 'pronoun') || hasPosHint(next, 'determiner')
 }
 
 function isVerbLikeToken(token: Token) {
@@ -267,6 +302,10 @@ function shouldStartClause(tokens: Token[], index: number) {
     return true
   }
 
+  if (isClauseIntroducingThat(tokens, index)) {
+    return true
+  }
+
   if (
     !COMMA_BOUNDARY_REGEX.test(token.leadingText) ||
     !isSubjectStarter(token)
@@ -281,6 +320,14 @@ function getClauseSubjectStartIndex(tokens: Token[], verbIndex: number | null) {
   const searchEnd = verbIndex ?? tokens.length
 
   for (let index = 0; index < searchEnd; index += 1) {
+    if (
+      isClauseIntroducingThat(tokens, index) ||
+      isLeadingContentClauseThat(tokens, index) ||
+      isLeadingAdverbial(tokens, index)
+    ) {
+      continue
+    }
+
     if (isSubjectStarter(tokens[index])) {
       return index
     }

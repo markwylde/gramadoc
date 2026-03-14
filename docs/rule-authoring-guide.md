@@ -142,6 +142,29 @@ Before shipping a new default-on rule, explicitly check:
 If the answer is yes, either add a guard, move it into an optional pack, or
 defer it until the contextual framework is stronger.
 
+## Subject Confidence And Shared Syntax
+
+For syntax-sensitive correctness rules, use this precedence order when deciding
+whether to emit a rewrite:
+
+1. trust shared clause structure first
+2. fall back to bounded local recovery only when the evidence is still strong
+3. use sentence-level fallback only as a last resort
+
+Weak evidence should not drive a rewrite. In practice, treat these as weak:
+
+- morphology-only noun guesses
+- fallback noun guesses on unknown open-class words
+- capitalization-only proper-name guesses
+
+When subject identity is uncertain, prefer staying quiet over inventing a
+specific agreement correction. This matters most for agreement, but the same
+discipline applies anywhere a rule is tempted to rebuild syntax locally.
+
+When you add a precision fix for this kind of rule, pair the quiet examples
+with nearby true positives in executable tests so we do not solve one side by
+breaking the other.
+
 ## When To Create A New Rule Family
 
 Create a new family only when the problem has distinct user-facing semantics,
