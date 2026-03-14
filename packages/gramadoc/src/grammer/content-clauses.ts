@@ -33,7 +33,9 @@ export function isLikelyContentClausePredicateToken(
   )
 }
 
-export function isLikelyContentClauseEmbeddingTrigger(token: Token | undefined) {
+export function isLikelyContentClauseEmbeddingTrigger(
+  token: Token | undefined,
+) {
   if (!token || hasPosHint(token, 'preposition')) {
     return false
   }

@@ -1,7 +1,5 @@
 import type { Match } from '../../../../types.js'
-import {
-  isClauseIntroducingThat as isSharedClauseIntroducingThat,
-} from '../../../content-clauses.js'
+import { isClauseIntroducingThat as isSharedClauseIntroducingThat } from '../../../content-clauses.js'
 import { hasPosHint, hasStrongPosHint } from '../../../linguistics.js'
 import { isLikelyFiniteVerbMorphology } from '../../../morphology.js'
 import { createPatternRule } from '../../../patterns.js'
@@ -190,7 +188,8 @@ function isClauseIntroducingThat(
   return isSharedClauseIntroducingThat(tokens, index, {
     predicateWords: LIKELY_PREDICATE_WORDS,
     isLikelyAntecedent: isLikelyClauseAntecedent,
-    hasWhitespaceBridge: (left, right) => hasWhitespaceBridge(text, left, right),
+    hasWhitespaceBridge: (left, right) =>
+      hasWhitespaceBridge(text, left, right),
   })
 }
 

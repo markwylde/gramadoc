@@ -511,22 +511,24 @@ function findSubjectHead(
   headSlice: Token[],
   options: SubjectResolutionOptions = {},
 ) {
-  const explicitSubject = [...headSlice].reverse().find((token, reverseIndex) => {
-    const actualIndex = headSlice.length - 1 - reverseIndex
-    const previous = headSlice[actualIndex - 1]
+  const explicitSubject = [...headSlice]
+    .reverse()
+    .find((token, reverseIndex) => {
+      const actualIndex = headSlice.length - 1 - reverseIndex
+      const previous = headSlice[actualIndex - 1]
 
-    return (
-      SINGULAR_SUBJECTS.has(token.normalized) ||
-      PLURAL_SUBJECTS.has(token.normalized) ||
-      isNominalSubjectToken(token) ||
-      isDeterminerAnchoredNominal(token, previous) ||
-      (options.allowVerbBackedHead &&
-        actualIndex === headSlice.length - 1 &&
-        previous &&
-        hasPosHint(previous, 'determiner') &&
-        hasPosHint(token, 'verb'))
-    )
-  })
+      return (
+        SINGULAR_SUBJECTS.has(token.normalized) ||
+        PLURAL_SUBJECTS.has(token.normalized) ||
+        isNominalSubjectToken(token) ||
+        isDeterminerAnchoredNominal(token, previous) ||
+        (options.allowVerbBackedHead &&
+          actualIndex === headSlice.length - 1 &&
+          previous &&
+          hasPosHint(previous, 'determiner') &&
+          hasPosHint(token, 'verb'))
+      )
+    })
   const nounLikeToken = [...headSlice].reverse().find((token, reverseIndex) => {
     const actualIndex = headSlice.length - 1 - reverseIndex
 
@@ -642,7 +644,9 @@ function resolveSubjectFromTokens(
     }
   }
 
-  const determiner = subjectSlice.find((token) => hasPosHint(token, 'determiner'))
+  const determiner = subjectSlice.find((token) =>
+    hasPosHint(token, 'determiner'),
+  )
 
   if (
     head.normalized === 'one' ||
@@ -973,7 +977,8 @@ function getSubjectConfidence(
 
   if (
     !strongSubjectEvidence &&
-    (subject.token.usedFallbackPosGuess || subject.token.posHintConfidence === 'low')
+    (subject.token.usedFallbackPosGuess ||
+      subject.token.posHintConfidence === 'low')
   ) {
     return 'low'
   }
@@ -1080,7 +1085,10 @@ function hasStrongSingularLocalSubject(
   )
 }
 
-function hasStrongSubjectEvidence(subject: SubjectInfo, subjectTokens: Token[]) {
+function hasStrongSubjectEvidence(
+  subject: SubjectInfo,
+  subjectTokens: Token[],
+) {
   if (
     hasPosHint(subject.token, 'pronoun') ||
     SINGULAR_SUBJECTS.has(subject.token.normalized) ||
@@ -1398,14 +1406,18 @@ function createAgreementDiagnostics(
 }
 
 function getClauseSubjectCandidate(tokensInClause: Token[]) {
-  const tokens = trimLeadingNonSubjectTokens(getClauseSubjectTokens(tokensInClause))
+  const tokens = trimLeadingNonSubjectTokens(
+    getClauseSubjectTokens(tokensInClause),
+  )
   const info = getSubjectInfo(tokensInClause)
 
   return info ? ({ info, tokens } satisfies SubjectCandidate) : null
 }
 
 function getLocalSubjectCandidate(tokensInClause: Token[], verb: Token) {
-  const tokens = trimLeadingNonSubjectTokens(getLocalSubjectTokens(tokensInClause, verb))
+  const tokens = trimLeadingNonSubjectTokens(
+    getLocalSubjectTokens(tokensInClause, verb),
+  )
   const info = getLocalSubjectInfo(tokensInClause, verb)
 
   return info ? ({ info, tokens } satisfies SubjectCandidate) : null
@@ -1421,7 +1433,10 @@ function getSentenceFallbackSubjectCandidate(
   return info ? ({ info, tokens } satisfies SubjectCandidate) : null
 }
 
-function getRelativeClauseSubjectCandidate(tokensInClause: Token[], verb: Token) {
+function getRelativeClauseSubjectCandidate(
+  tokensInClause: Token[],
+  verb: Token,
+) {
   const verbIndex = tokensInClause.findIndex(
     (token) => token.index === verb.index,
   )
@@ -1519,7 +1534,10 @@ function resolveFiniteAgreementSubject(
   verb: Token,
   localSubjectTokens: Token[],
 ) {
-  const invertedQuestionSubject = getInvertedQuestionSubjectInfo(tokensInClause, verb)
+  const invertedQuestionSubject = getInvertedQuestionSubjectInfo(
+    tokensInClause,
+    verb,
+  )
   const relativeClauseSubject = getRelativeClauseSubjectCandidate(
     tokensInClause,
     verb,
@@ -1548,7 +1566,8 @@ function resolveFiniteAgreementSubject(
       : null
   const clauseSubjectBeforeVerb = clauseSubject?.info.token.offset
   const usableClauseSubject =
-    clauseSubjectBeforeVerb !== undefined && clauseSubjectBeforeVerb < verb.offset
+    clauseSubjectBeforeVerb !== undefined &&
+    clauseSubjectBeforeVerb < verb.offset
       ? clauseSubject
       : null
   const sentenceFallbackSubject =
@@ -1997,18 +2016,18 @@ export const subjectVerbAgreementRule: GrammerRule = {
 
           matches.push(
             createMatch({
-            text,
-            offset: verb.offset,
-            length: verb.length,
-            message: `Use "${preserveCase(verb.value, expectedVerb)}" with "${bareVerbResolvedSubject.info.token.value}".`,
-            replacements: [preserveCase(verb.value, expectedVerb)],
-            confidenceLabel,
-            diagnostics: createAgreementDiagnostics(
-              verb,
-              bareVerbResolvedSubject,
-              expectedVerb,
+              text,
+              offset: verb.offset,
+              length: verb.length,
+              message: `Use "${preserveCase(verb.value, expectedVerb)}" with "${bareVerbResolvedSubject.info.token.value}".`,
+              replacements: [preserveCase(verb.value, expectedVerb)],
               confidenceLabel,
-              'singular-subject-bare-verb',
+              diagnostics: createAgreementDiagnostics(
+                verb,
+                bareVerbResolvedSubject,
+                expectedVerb,
+                confidenceLabel,
+                'singular-subject-bare-verb',
               ),
               rule: subjectVerbAgreementRule,
             }),

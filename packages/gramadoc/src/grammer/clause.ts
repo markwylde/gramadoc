@@ -1,6 +1,6 @@
 import {
-  isClauseIntroducingThat as isSharedClauseIntroducingThat,
   isLikelyContentClauseSubjectToken,
+  isClauseIntroducingThat as isSharedClauseIntroducingThat,
 } from './content-clauses.js'
 import { hasPosHint } from './linguistics.js'
 import {

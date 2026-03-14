@@ -105,10 +105,7 @@ describe('subjectVerbAgreementRule', () => {
 
   it('does not treat sentence-initial frequency adverbs as singular subjects', () => {
     expect(
-      runRule(
-        subjectVerbAgreementRule,
-        'Sometimes I think that I can fly.',
-      ),
+      runRule(subjectVerbAgreementRule, 'Sometimes I think that I can fly.'),
     ).toEqual([])
   })
 
@@ -258,10 +255,7 @@ describe('subjectVerbAgreementRule', () => {
     )
 
     expect(
-      runRule(
-        subjectVerbAgreementRule,
-        'One of the changes makes sense.',
-      ),
+      runRule(subjectVerbAgreementRule, 'One of the changes makes sense.'),
     ).toEqual([])
   })
 
@@ -349,10 +343,7 @@ describe('subjectVerbAgreementRule', () => {
   })
 
   it('prefers shared clause subjects for simple finite-form agreement when local expansion is not needed', () => {
-    const matches = runRule(
-      subjectVerbAgreementRule,
-      'Reports was confusing.',
-    )
+    const matches = runRule(subjectVerbAgreementRule, 'Reports was confusing.')
 
     expect(matches).toHaveLength(1)
     expect(matches[0]).toMatchObject({
