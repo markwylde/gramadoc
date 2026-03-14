@@ -75,7 +75,8 @@ describe('irregularPastParticipleRule', () => {
 
     expect(matches).toHaveLength(1)
     expect(matches[0]).toMatchObject({
-      message: 'Use the simple past "saw" here instead of the participle "seen".',
+      message:
+        'Use the simple past "saw" here instead of the participle "seen".',
       replacements: [{ value: 'saw' }],
     })
   })

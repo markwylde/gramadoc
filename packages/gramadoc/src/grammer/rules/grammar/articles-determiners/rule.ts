@@ -1,12 +1,11 @@
+import type { Match } from '../../../../types.js'
 import { hasPosHint, hasStrongPosHint } from '../../../linguistics.js'
 import { isLikelyFiniteVerbMorphology } from '../../../morphology.js'
-import type { Match } from '../../../../types.js'
 import { createPatternRule } from '../../../patterns.js'
-import type { Token } from '../../../types.js'
 import articlePhonetics from '../../../resources/article-phonetics.json' with {
   type: 'json',
 }
-import type { GrammerRule } from '../../../types.js'
+import type { GrammerRule, Token } from '../../../types.js'
 import { createMatch, preserveCase } from '../../../utils.js'
 
 const VOWEL_START_REGEX = /^[aeiou]/i

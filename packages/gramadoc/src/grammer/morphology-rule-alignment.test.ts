@@ -9,7 +9,11 @@ function getToken(text: string, normalized: string) {
 
   expect(token, `Expected token "${normalized}" in: ${text}`).toBeDefined()
 
-  return token!
+  if (!token) {
+    throw new Error(`Expected token "${normalized}" in: ${text}`)
+  }
+
+  return token
 }
 
 function getRuleIds(text: string) {

@@ -1,14 +1,14 @@
+import {
+  isLikelyPastParticipleMorphology,
+  isLikelyVerbInAuxiliaryContext,
+  isLikelyVerbInInfinitiveContext,
+} from './morphology.js'
 import type {
   AnnotationConfidence,
   Token,
   TokenPosEvidenceSource,
   TokenPosHint,
 } from './types.js'
-import {
-  isLikelyPastParticipleMorphology,
-  isLikelyVerbInAuxiliaryContext,
-  isLikelyVerbInInfinitiveContext,
-} from './morphology.js'
 
 const SUBJECT_STARTER_HINTS = new Set<TokenPosHint>([
   'determiner',

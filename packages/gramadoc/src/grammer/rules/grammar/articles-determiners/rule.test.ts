@@ -208,17 +208,14 @@ describe('demonstrativeMisuseRule', () => {
     ).toEqual([])
   })
 
-  it(
-    'does not treat content-clause "that" before a plural subject and finite verb as a demonstrative',
-    () => {
-      expect(
-        runRule(
-          demonstrativeMisuseRule,
-          'The guide explained that researchers say the timeline changed.',
-        ),
-      ).toEqual([])
-    },
-  )
+  it('does not treat content-clause "that" before a plural subject and finite verb as a demonstrative', () => {
+    expect(
+      runRule(
+        demonstrativeMisuseRule,
+        'The guide explained that researchers say the timeline changed.',
+      ),
+    ).toEqual([])
+  })
 
   it('does not treat sentence-medial content-clause "that" as a demonstrative before plural subjects', () => {
     expect(
@@ -229,29 +226,23 @@ describe('demonstrativeMisuseRule', () => {
     ).toEqual([])
   })
 
-  it(
-    'does not treat relative-clause "that" before a plural subject and reporting verb as a demonstrative',
-    () => {
-      expect(
-        runRule(
-          demonstrativeMisuseRule,
-          'The findings include burial sites that researchers say could provide new clues.',
-        ),
-      ).toEqual([])
-    },
-  )
+  it('does not treat relative-clause "that" before a plural subject and reporting verb as a demonstrative', () => {
+    expect(
+      runRule(
+        demonstrativeMisuseRule,
+        'The findings include burial sites that researchers say could provide new clues.',
+      ),
+    ).toEqual([])
+  })
 
-  it(
-    'does not treat relative-clause "that" in other noun-antecedent patterns as a demonstrative',
-    () => {
-      expect(
-        runRule(
-          demonstrativeMisuseRule,
-          'We saw artifacts that historians believe belong to traders.',
-        ),
-      ).toEqual([])
-    },
-  )
+  it('does not treat relative-clause "that" in other noun-antecedent patterns as a demonstrative', () => {
+    expect(
+      runRule(
+        demonstrativeMisuseRule,
+        'We saw artifacts that historians believe belong to traders.',
+      ),
+    ).toEqual([])
+  })
 
   it('does not treat sentence-start content clauses as demonstrative misuse', () => {
     expect(

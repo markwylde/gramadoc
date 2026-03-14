@@ -505,25 +505,29 @@ function getSubjectInfo(tokensInClause: Token[]) {
   }
 
   const subjectSlice = getSubjectHeadSlice(clauseSubjectTokens)
-  const nominalTokens = subjectSlice.filter((token, index) =>
-    isNominalSubjectToken(token) ||
-    isDeterminerAnchoredNominal(token, subjectSlice[index - 1]),
-  )
-  const nounLikeToken = [...subjectSlice].reverse().find((token, reverseIndex) => {
-    const actualIndex = subjectSlice.length - 1 - reverseIndex
-    return (
+  const nominalTokens = subjectSlice.filter(
+    (token, index) =>
       isNominalSubjectToken(token) ||
-      isDeterminerAnchoredNominal(token, subjectSlice[actualIndex - 1])
-    )
-  })
+      isDeterminerAnchoredNominal(token, subjectSlice[index - 1]),
+  )
+  const nounLikeToken = [...subjectSlice]
+    .reverse()
+    .find((token, reverseIndex) => {
+      const actualIndex = subjectSlice.length - 1 - reverseIndex
+      return (
+        isNominalSubjectToken(token) ||
+        isDeterminerAnchoredNominal(token, subjectSlice[actualIndex - 1])
+      )
+    })
 
   if (!nounLikeToken) {
     return null
   }
 
   const hasCoordinator = hasCoordinatedLocalSubject(subjectSlice)
-  const coordinatedHead = [...subjectSlice].reverse().find(
-    (token, reverseIndex) => {
+  const coordinatedHead = [...subjectSlice]
+    .reverse()
+    .find((token, reverseIndex) => {
       const actualIndex = subjectSlice.length - 1 - reverseIndex
 
       return (
@@ -534,11 +538,13 @@ function getSubjectInfo(tokensInClause: Token[]) {
           SINGULAR_SUBJECTS.has(token.normalized) ||
           PLURAL_SUBJECTS.has(token.normalized))
       )
-    },
-  )
+    })
 
   if (hasCoordinator) {
-    return { token: coordinatedHead ?? nounLikeToken, number: 'plural' as const }
+    return {
+      token: coordinatedHead ?? nounLikeToken,
+      number: 'plural' as const,
+    }
   }
 
   if (isLikelySingularProperName(subjectSlice)) {
@@ -581,16 +587,16 @@ function getLocalSubjectTokens(tokensInClause: Token[], verb: Token) {
       if (SUBJECT_HEAD_PREPOSITIONS.has(token.normalized)) {
         const headCandidate = precedingTokens[subjectStartIndex - 1]
 
-      if (
-        headCandidate &&
-        (isNominalSubjectToken(headCandidate) ||
-          isDeterminerAnchoredNominal(
-            headCandidate,
-            precedingTokens[subjectStartIndex - 2],
-          ) ||
-          SINGULAR_SUBJECTS.has(headCandidate.normalized) ||
-          PLURAL_SUBJECTS.has(headCandidate.normalized))
-      ) {
+        if (
+          headCandidate &&
+          (isNominalSubjectToken(headCandidate) ||
+            isDeterminerAnchoredNominal(
+              headCandidate,
+              precedingTokens[subjectStartIndex - 2],
+            ) ||
+            SINGULAR_SUBJECTS.has(headCandidate.normalized) ||
+            PLURAL_SUBJECTS.has(headCandidate.normalized))
+        ) {
           subjectStartIndex -= 1
           continue
         }
@@ -599,19 +605,19 @@ function getLocalSubjectTokens(tokensInClause: Token[], verb: Token) {
       if (RELATIVE_CLAUSE_BREAKS.has(token.normalized)) {
         const antecedentCandidate = precedingTokens[subjectStartIndex - 1]
 
-      if (
-        antecedentCandidate &&
-        ((!hasPosHint(antecedentCandidate, 'verb') &&
-          (isNominalSubjectToken(antecedentCandidate) ||
-            isDeterminerAnchoredNominal(
-              antecedentCandidate,
-              precedingTokens[subjectStartIndex - 2],
-            ))) ||
-          hasPosHint(antecedentCandidate, 'determiner'))
-      ) {
-        subjectStartIndex -= 1
-        continue
-      }
+        if (
+          antecedentCandidate &&
+          ((!hasPosHint(antecedentCandidate, 'verb') &&
+            (isNominalSubjectToken(antecedentCandidate) ||
+              isDeterminerAnchoredNominal(
+                antecedentCandidate,
+                precedingTokens[subjectStartIndex - 2],
+              ))) ||
+            hasPosHint(antecedentCandidate, 'determiner'))
+        ) {
+          subjectStartIndex -= 1
+          continue
+        }
       }
 
       break
@@ -638,7 +644,8 @@ function getLocalSubjectTokens(tokensInClause: Token[], verb: Token) {
         (previous?.isCapitalized ||
           precedingTokens[subjectStartIndex + 1]?.isCapitalized) &&
         !hasPosHint(token, 'preposition')) ||
-      (hasPosHint(token, 'noun') && hasPosHint(previous ?? token, 'preposition')) ||
+      (hasPosHint(token, 'noun') &&
+        hasPosHint(previous ?? token, 'preposition')) ||
       hasPosHint(token, 'determiner') ||
       hasPosHint(token, 'adjective') ||
       hasPosHint(token, 'adverb') ||
@@ -671,21 +678,23 @@ function hasCoordinatedLocalSubject(tokens: Token[]) {
 
   const left = tokens
     .slice(0, coordinatorIndex)
-    .some((token, index, slice) =>
-      isNominalSubjectToken(token) ||
-      isDeterminerAnchoredNominal(token, slice[index - 1]) ||
-      hasPosHint(token, 'noun') ||
-      PLURAL_SUBJECTS.has(token.normalized) ||
-      SINGULAR_SUBJECTS.has(token.normalized),
+    .some(
+      (token, index, slice) =>
+        isNominalSubjectToken(token) ||
+        isDeterminerAnchoredNominal(token, slice[index - 1]) ||
+        hasPosHint(token, 'noun') ||
+        PLURAL_SUBJECTS.has(token.normalized) ||
+        SINGULAR_SUBJECTS.has(token.normalized),
     )
   const right = tokens
     .slice(coordinatorIndex + 1)
-    .some((token, index, slice) =>
-      isNominalSubjectToken(token) ||
-      isDeterminerAnchoredNominal(token, slice[index - 1]) ||
-      hasPosHint(token, 'noun') ||
-      PLURAL_SUBJECTS.has(token.normalized) ||
-      SINGULAR_SUBJECTS.has(token.normalized),
+    .some(
+      (token, index, slice) =>
+        isNominalSubjectToken(token) ||
+        isDeterminerAnchoredNominal(token, slice[index - 1]) ||
+        hasPosHint(token, 'noun') ||
+        PLURAL_SUBJECTS.has(token.normalized) ||
+        SINGULAR_SUBJECTS.has(token.normalized),
     )
 
   return left && right
@@ -708,7 +717,8 @@ function getLocalSubjectInfo(tokensInClause: Token[], verb: Token) {
 
   if (isLikelySingularProperName(localSubjectTokens)) {
     const nominalToken =
-      localSubjectTokens.find(isNominalSubjectToken) ?? localSubjectTokens.at(-1)
+      localSubjectTokens.find(isNominalSubjectToken) ??
+      localSubjectTokens.at(-1)
 
     if (nominalToken) {
       return { token: nominalToken, number: 'singular' as const }
@@ -717,7 +727,8 @@ function getLocalSubjectInfo(tokensInClause: Token[], verb: Token) {
 
   if (isLikelySingularTitledWork(localSubjectTokens)) {
     const nominalToken =
-      localSubjectTokens.find(isNominalSubjectToken) ?? localSubjectTokens.at(-1)
+      localSubjectTokens.find(isNominalSubjectToken) ??
+      localSubjectTokens.at(-1)
 
     if (nominalToken) {
       return { token: nominalToken, number: 'singular' as const }
@@ -759,8 +770,9 @@ function getLocalSubjectInfo(tokensInClause: Token[], verb: Token) {
 
   const determiner = headSlice.find((token) => hasPosHint(token, 'determiner'))
   const hasCoordinator = hasCoordinatedLocalSubject(headSlice)
-  const coordinatedHead = [...headSlice].reverse().find(
-    (token, reverseIndex) => {
+  const coordinatedHead = [...headSlice]
+    .reverse()
+    .find((token, reverseIndex) => {
       const actualIndex = headSlice.length - 1 - reverseIndex
 
       return (
@@ -771,8 +783,7 @@ function getLocalSubjectInfo(tokensInClause: Token[], verb: Token) {
           SINGULAR_SUBJECTS.has(token.normalized) ||
           PLURAL_SUBJECTS.has(token.normalized))
       )
-    },
-  )
+    })
 
   if (hasCoordinator) {
     return { token: coordinatedHead ?? head, number: 'plural' as const }
@@ -905,7 +916,8 @@ function getSentenceFallbackSubjectTokens(
       (token.isCapitalized &&
         (previous?.isCapitalized || next?.isCapitalized) &&
         !hasPosHint(token, 'preposition')) ||
-      (hasPosHint(token, 'noun') && hasPosHint(previous ?? token, 'preposition')) ||
+      (hasPosHint(token, 'noun') &&
+        hasPosHint(previous ?? token, 'preposition')) ||
       hasPosHint(token, 'determiner') ||
       hasPosHint(token, 'adjective') ||
       hasPosHint(token, 'adverb') ||
@@ -920,7 +932,9 @@ function getSentenceFallbackSubjectTokens(
     break
   }
 
-  return trimLeadingNonSubjectTokens(precedingTokens.slice(subjectStartIndex + 1))
+  return trimLeadingNonSubjectTokens(
+    precedingTokens.slice(subjectStartIndex + 1),
+  )
 }
 
 function getSentenceFallbackSubjectInfo(
@@ -987,7 +1001,11 @@ function getVerbAgreementConfidence(verb: Token) {
     : verb.morphology.verb.confidence
 }
 
-function getAgreementConfidence(subject: SubjectInfo, subjectTokens: Token[], verb: Token) {
+function getAgreementConfidence(
+  subject: SubjectInfo,
+  subjectTokens: Token[],
+  verb: Token,
+) {
   return getLowerConfidence(
     getSubjectConfidence(subject, subjectTokens),
     getVerbAgreementConfidence(verb),
@@ -1094,7 +1112,11 @@ function hasLeadingAuxiliaryOrModal(
         )
       : 0
 
-  if (verbIndex <= 0 || localSubjectStartIndex < 0 || localSubjectStartIndex >= verbIndex) {
+  if (
+    verbIndex <= 0 ||
+    localSubjectStartIndex < 0 ||
+    localSubjectStartIndex >= verbIndex
+  ) {
     return false
   }
 
@@ -1226,7 +1248,8 @@ function shouldSkipExplicitSubject(
   clauseTokens: Token[],
   localSubjectTokens: Token[],
 ) {
-  const localSubjectStart = localSubjectTokens[0]?.offset ?? Number.POSITIVE_INFINITY
+  const localSubjectStart =
+    localSubjectTokens[0]?.offset ?? Number.POSITIVE_INFINITY
 
   return clauseTokens.some(
     (token) =>
@@ -1322,7 +1345,10 @@ export const subjectVerbAgreementRule: GrammerRule = {
       const clauseTokens = getTokenClauseTokens(context, verb)
       const localSubjectTokens = getLocalSubjectTokens(clauseTokens, verb)
 
-      if (!forms && !hasRecoverablePredicateSignal(verb, following, tokens[index - 1])) {
+      if (
+        !forms &&
+        !hasRecoverablePredicateSignal(verb, following, tokens[index - 1])
+      ) {
         continue
       }
 
@@ -1496,11 +1522,7 @@ export const subjectVerbAgreementRule: GrammerRule = {
       }
 
       if (
-        hasEarlierModal(
-          clauseTokens,
-          localSubjectTokens,
-          verb,
-        ) &&
+        hasEarlierModal(clauseTokens, localSubjectTokens, verb) &&
         hasRecoverablePredicateSignal(verb, following, tokens[index - 1]) &&
         isLikelyThirdPersonSingularVerb(verb, following)
       ) {
@@ -1612,8 +1634,16 @@ export const subjectVerbAgreementRule: GrammerRule = {
           QUESTION_LEADS.has(clauseTokens[0]?.normalized ?? '') &&
           hasEarlierModal(clauseTokens, resolvedSubject.tokens, verb)
         ) &&
-        !hasLeadingAuxiliaryOrModal(clauseTokens, resolvedSubject.tokens, verb) &&
-        !hasEarlierAuxiliaryOrModal(clauseTokens, resolvedSubject.tokens, verb) &&
+        !hasLeadingAuxiliaryOrModal(
+          clauseTokens,
+          resolvedSubject.tokens,
+          verb,
+        ) &&
+        !hasEarlierAuxiliaryOrModal(
+          clauseTokens,
+          resolvedSubject.tokens,
+          verb,
+        ) &&
         !isLikelySubjectHeadBeforeFiniteVerb(clauseTokens, verb) &&
         hasRecoverablePredicateSignal(verb, following, tokens[index - 1]) &&
         hasPosHint(verb, 'verb') &&

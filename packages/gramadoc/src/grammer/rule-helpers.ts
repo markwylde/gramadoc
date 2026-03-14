@@ -428,7 +428,10 @@ export function matchesLexicalContextGuard(
       guard.previousTokenValues,
     ) &&
     matchesContextValues(nextToken?.normalized, guard.nextTokenValues) &&
-    matchesContextValues(previousToken?.morphology.lemma, guard.previousLemmas) &&
+    matchesContextValues(
+      previousToken?.morphology.lemma,
+      guard.previousLemmas,
+    ) &&
     matchesContextValues(nextToken?.morphology.lemma, guard.nextLemmas)
   )
 }

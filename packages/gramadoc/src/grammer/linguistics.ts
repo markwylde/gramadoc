@@ -1,11 +1,3 @@
-import type {
-  AnnotationConfidence,
-  StyleRepetitionPosBucket,
-  Token,
-  TokenPosEvidenceSource,
-  TokenPosHint,
-  TokenPosReading,
-} from './types.js'
 import {
   analyzeTokenMorphology,
   CONTRACTION_ANNOTATIONS,
@@ -15,6 +7,14 @@ import {
   PARTICIPIAL_ADJECTIVES,
   S_FORM_MORPHOLOGY_BLOCKLIST,
 } from './morphology.js'
+import type {
+  AnnotationConfidence,
+  StyleRepetitionPosBucket,
+  Token,
+  TokenPosEvidenceSource,
+  TokenPosHint,
+  TokenPosReading,
+} from './types.js'
 
 const ADJECTIVES = new Set([
   'alive',

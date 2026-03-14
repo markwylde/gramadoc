@@ -8,11 +8,7 @@ function getRuleIds(text: string) {
   )
 }
 
-function getToken(
-  text: string,
-  normalized: string,
-  occurrence = 0,
-) {
+function getToken(text: string, normalized: string, occurrence = 0) {
   const matches = buildRuleCheckContext(text).tokens.filter(
     (token) => token.normalized === normalized,
   )
@@ -22,7 +18,15 @@ function getToken(
     `Expected token "${normalized}" occurrence ${occurrence} in: ${text}`,
   ).toBeDefined()
 
-  return matches[occurrence]!
+  const match = matches[occurrence]
+
+  if (!match) {
+    throw new Error(
+      `Expected token "${normalized}" occurrence ${occurrence} in: ${text}`,
+    )
+  }
+
+  return match
 }
 
 describe('morphology known failures', () => {

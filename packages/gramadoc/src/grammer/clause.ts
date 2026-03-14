@@ -1,9 +1,9 @@
 import { hasPosHint } from './linguistics.js'
 import {
-  isLikelyVerbInAuxiliaryContext,
   isLikelyFiniteVerbMorphology,
-  isLikelyVerbInInfinitiveContext,
   isLikelyPastParticipleMorphology,
+  isLikelyVerbInAuxiliaryContext,
+  isLikelyVerbInInfinitiveContext,
 } from './morphology.js'
 import type { ClausePart, ClauseRange, SentenceRange, Token } from './types.js'
 
