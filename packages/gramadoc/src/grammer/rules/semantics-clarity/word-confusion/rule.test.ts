@@ -279,6 +279,28 @@ describe('quietQuiteConfusionRule', () => {
   })
 })
 
+describe('toTooTwoConfusionRule', () => {
+  it('flags infinitive spellings when count context clearly calls for the number form', () => {
+    const matches = runRule(
+      toTooTwoConfusionRule,
+      'We have to options queued. There are to tests left.',
+    )
+
+    expect(matches).toHaveLength(2)
+    expect(matches[0]?.replacements[0]).toEqual({ value: 'two' })
+    expect(matches[1]?.replacements[0]).toEqual({ value: 'two' })
+  })
+
+  it('stays quiet for correct number phrases even when the following noun is verb-ambiguous', () => {
+    expect(
+      runRule(
+        toTooTwoConfusionRule,
+        'There are two issues in the draft. We have two reports to review.',
+      ),
+    ).toEqual([])
+  })
+})
+
 describe('confusion ranking evidence', () => {
   it('records when statistical, casing, and POS cues are driving ranking decisions', () => {
     const thanThenSet = contextualConfusionSets.find(

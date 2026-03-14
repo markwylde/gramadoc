@@ -4,8 +4,7 @@ import type { HouseStyleTerm } from './resources/house-style.js'
 export interface Token {
   value: string
   normalized: string
-  lemma: string
-  lemmaSource: LemmaSource
+  morphology: TokenMorphology
   lexicalPosHints: TokenPosHint[]
   morphologyPosHints: TokenPosHint[]
   fallbackPosHints: TokenPosHint[]
@@ -14,7 +13,6 @@ export interface Token {
   posHints: TokenPosHint[]
   posHintConfidence: AnnotationConfidence
   usedFallbackPosGuess: boolean
-  isOpenClassUnknown: boolean
   isPosAmbiguous: boolean
   disambiguationProvenance: string[]
   offset: number
@@ -35,7 +33,15 @@ export interface Token {
 
 export type AnnotationConfidence = 'high' | 'medium' | 'low'
 
-export type LemmaSource = 'heuristic' | 'identity' | 'irregular'
+export type MorphologyProvenance =
+  | 'ambiguous'
+  | 'contraction'
+  | 'heuristic'
+  | 'identity'
+  | 'irregular'
+  | 'regular'
+  | 'unresolved'
+
 export type RuleRiskTier = 'safe' | 'moderate' | 'risky'
 export type TokenPosEvidenceSource =
   | 'closed-class-lexicon'
@@ -59,6 +65,41 @@ export interface TokenPosReading {
   pos: TokenPosHint
   sources: TokenPosEvidenceSource[]
   confidence: AnnotationConfidence
+}
+
+export type VerbForm =
+  | 'base'
+  | 'past'
+  | 'past-participle'
+  | 'present-participle'
+  | 'third-person-singular'
+
+export interface VerbMorphology {
+  isCandidate: boolean
+  form: VerbForm | null
+  base: string | null
+  candidates: string[]
+  provenance: MorphologyProvenance | null
+  confidence: AnnotationConfidence
+  isAmbiguous: boolean
+  isNonBaseForm: boolean
+  canBeBase: boolean
+  canBeThirdPersonSingular: boolean
+  canBePast: boolean
+  canBePastParticiple: boolean
+  canBePresentParticiple: boolean
+  isLexicalized: boolean
+}
+
+export interface TokenMorphology {
+  lemma: string
+  lemmaAlternates: string[]
+  provenance: MorphologyProvenance
+  confidence: AnnotationConfidence
+  isAmbiguous: boolean
+  ambiguityTags: string[]
+  isDictionaryWord: boolean
+  verb: VerbMorphology
 }
 
 export type StyleRepetitionPosBucket = 'adjective' | 'noun' | 'verb'
@@ -285,7 +326,6 @@ export interface AnnotationMetrics {
   lowConfidenceTokenCount: number
   ambiguousTokenCount: number
   fallbackGuessTokenCount: number
-  openClassUnknownTokenCount: number
   disambiguatedTokenCount: number
 }
 

@@ -1,0 +1,121 @@
+[
+  {
+    "ruleId": "EXTRA_LETTERS",
+    "offset": 71,
+    "length": 8,
+    "excerpt": "companys",
+    "note": "The plural noun is misspelled here and should be \"companies\"."
+  },
+  {
+    "ruleId": "MISSING_LETTERS",
+    "offset": 164,
+    "length": 11,
+    "excerpt": "inteligence",
+    "note": "The noun is missing a letter and should be \"intelligence\"."
+  },
+  {
+    "ruleId": "SUBJECT_VERB_AGREEMENT",
+    "offset": 345,
+    "length": 5,
+    "excerpt": "agree",
+    "note": "Singular indefinite subject \"everyone\" should take \"agrees\"."
+  },
+  {
+    "ruleId": "MISSING_COMMA_AFTER_INTRODUCTORY_PHRASE",
+    "offset": 765,
+    "length": 7,
+    "excerpt": "However",
+    "note": "Sentence-initial \"However\" should be followed by a comma."
+  },
+  {
+    "ruleId": "SUBJECT_VERB_AGREEMENT",
+    "offset": 786,
+    "length": 4,
+    "excerpt": "says",
+    "note": "Plural subject \"experts\" should take \"say\"."
+  },
+  {
+    "ruleId": "INCORRECT_APOSTROPHES",
+    "offset": 811,
+    "length": 4,
+    "excerpt": "dont",
+    "note": "The contraction needs an apostrophe: \"don't\"."
+  },
+  {
+    "ruleId": "SUBJECT_VERB_AGREEMENT",
+    "offset": 878,
+    "length": 2,
+    "excerpt": "is",
+    "note": "Plural subject \"Laptop makers\" should take \"are\"."
+  },
+  {
+    "ruleId": "EXTRA_LETTERS",
+    "offset": 951,
+    "length": 11,
+    "excerpt": "advertisied",
+    "note": "The past participle is misspelled here and should be \"advertised\"."
+  },
+  {
+    "ruleId": "PHRASE_WORD_CHOICE",
+    "offset": 1023,
+    "length": 8,
+    "excerpt": "would of",
+    "note": "The phrase should be \"would have\"."
+  },
+  {
+    "ruleId": "SUBJECT_VERB_AGREEMENT",
+    "offset": 1079,
+    "length": 6,
+    "excerpt": "claims",
+    "note": "Plural subject \"Engineers\" should take \"claim\"."
+  },
+  {
+    "ruleId": "INCORRECT_APOSTROPHES",
+    "offset": 1242,
+    "length": 4,
+    "excerpt": "dont",
+    "note": "The contraction needs an apostrophe: \"don't\"."
+  },
+  {
+    "ruleId": "SUBJECT_VERB_AGREEMENT",
+    "offset": 1328,
+    "length": 7,
+    "excerpt": "involve",
+    "note": "Singular subject \"development\" should take \"involves\"."
+  },
+  {
+    "ruleId": "SUBJECT_VERB_AGREEMENT",
+    "offset": 1522,
+    "length": 4,
+    "excerpt": "make",
+    "note": "Singular subject \"This\" should take \"makes\"."
+  },
+  {
+    "ruleId": "SUBJECT_VERB_AGREEMENT",
+    "offset": 2023,
+    "length": 7,
+    "excerpt": "remains",
+    "note": "Plural subject \"prices\" should take \"remain\"."
+  },
+  {
+    "ruleId": "SUBJECT_VERB_AGREEMENT",
+    "offset": 2129,
+    "length": 5,
+    "excerpt": "warns",
+    "note": "Plural subject \"analysts\" should take \"warn\"."
+  },
+  {
+    "ruleId": "SUBJECT_VERB_AGREEMENT",
+    "offset": 2350,
+    "length": 9,
+    "excerpt": "continues",
+    "note": "Plural subject \"technology companies\" should take \"continue\"."
+  },
+  {
+    "ruleId": "DEMONSTRATIVE_MISUSE",
+    "offset": 2506,
+    "length": 5,
+    "excerpt": "Those",
+    "note": "Plural demonstrative \"Those\" should not modify the singular noun \"laptop\" here."
+  }
+]

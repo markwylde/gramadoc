@@ -1,0 +1,72 @@
+[
+  {
+    "ruleId": "SUBJECT_VERB_AGREEMENT",
+    "offset": 451,
+    "length": 3,
+    "excerpt": "has",
+    "note": "Plural subject \"departments\" should pair with \"have\"."
+  },
+  {
+    "ruleId": "SUBJECT_VERB_AGREEMENT",
+    "offset": 524,
+    "length": 5,
+    "excerpt": "reach",
+    "note": "Singular subject \"it\" should pair with \"reaches\"."
+  },
+  {
+    "ruleId": "IRREGULAR_PAST_PARTICIPLE",
+    "offset": 576,
+    "length": 4,
+    "excerpt": "seen",
+    "note": "The finite verb here should be \"saw\" rather than the participle \"seen\"."
+  },
+  {
+    "ruleId": "SUBJECT_VERB_AGREEMENT",
+    "offset": 864,
+    "length": 6,
+    "excerpt": "remain",
+    "note": "Singular subject \"situation\" should pair with \"remains\"."
+  },
+  {
+    "ruleId": "SUBJECT_VERB_AGREEMENT",
+    "offset": 944,
+    "length": 5,
+    "excerpt": "picks",
+    "note": "Plural subject \"winds\" should pair with \"pick\"."
+  },
+  {
+    "ruleId": "DO_SUPPORT_BASE_VERB",
+    "offset": 1066,
+    "length": 4,
+    "excerpt": "came",
+    "note": "After do-support, the base form \"come\" is expected."
+  },
+  {
+    "ruleId": "THEIR_THERE_THEYRE",
+    "offset": 1135,
+    "length": 5,
+    "excerpt": "there",
+    "note": "The possessive determiner should be \"their\"."
+  },
+  {
+    "ruleId": "SUBJECT_VERB_AGREEMENT",
+    "offset": 1667,
+    "length": 2,
+    "excerpt": "is",
+    "note": "Plural subject \"Volunteers\" should pair with \"are\"."
+  },
+  {
+    "ruleId": "INFINITIVE_BASE_VERB",
+    "offset": 1886,
+    "length": 5,
+    "excerpt": "comes",
+    "note": "After the modal \"should\", the base form \"come\" is expected."
+  },
+  {
+    "ruleId": "DEMONSTRATIVE_MISUSE",
+    "offset": 1941,
+    "length": 5,
+    "excerpt": "Those",
+    "note": "Plural demonstrative \"Those\" should not modify the singular noun \"shelter\" here."
+  }
+]

@@ -97,6 +97,9 @@ const falsePositiveCorpus = [
   "I can't stand it and every update makes it worse.",
   'We noticed it and each deploy fixes one thing.',
   'I know it and every reminder helps.',
+  'Sometimes I think that I need to want to need to do the right thing.',
+  'We drove to London yesterday and want to walk home later.',
+  'The transcript quoted "Why went home so early?" as an example sentence.',
 ]
 
 describe('benchmark corpus', () => {

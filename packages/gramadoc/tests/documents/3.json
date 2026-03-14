@@ -1,0 +1,114 @@
+[
+  {
+    "ruleId": "SUBJECT_VERB_AGREEMENT",
+    "offset": 31,
+    "length": 3,
+    "excerpt": "has",
+    "note": "Plural subject \"skylines\" should pair with \"have\"."
+  },
+  {
+    "ruleId": "SUBJECT_VERB_AGREEMENT",
+    "offset": 90,
+    "length": 2,
+    "excerpt": "is",
+    "note": "Plural subject \"buildings\" should pair with \"are\"."
+  },
+  {
+    "ruleId": "SUBJECT_VERB_AGREEMENT",
+    "offset": 164,
+    "length": 4,
+    "excerpt": "says",
+    "note": "Plural subject \"Architects\" should pair with \"say\"."
+  },
+  {
+    "ruleId": "SUBJECT_VERB_AGREEMENT",
+    "offset": 219,
+    "length": 3,
+    "excerpt": "are",
+    "note": "Singular head noun \"demand\" should pair with \"is\"."
+  },
+  {
+    "ruleId": "SUBJECT_VERB_AGREEMENT",
+    "offset": 278,
+    "length": 4,
+    "excerpt": "goes",
+    "note": "Plural subject \"designs\" should pair with \"go\"."
+  },
+  {
+    "ruleId": "SUBJECT_VERB_AGREEMENT",
+    "offset": 414,
+    "length": 5,
+    "excerpt": "tries",
+    "note": "Plural subject \"towers\" should pair with \"try\"."
+  },
+  {
+    "ruleId": "SUBJECT_VERB_AGREEMENT",
+    "offset": 534,
+    "length": 6,
+    "excerpt": "blocks",
+    "note": "Plural subject \"buildings\" should pair with \"block\"."
+  },
+  {
+    "ruleId": "SUBJECT_VERB_AGREEMENT",
+    "offset": 731,
+    "length": 7,
+    "excerpt": "include",
+    "note": "Singular noun phrase \"complex\" should pair with \"includes\"."
+  },
+  {
+    "ruleId": "SUBJECT_VERB_AGREEMENT",
+    "offset": 952,
+    "length": 4,
+    "excerpt": "look",
+    "note": "Singular subject \"It\" should pair with \"looks\"."
+  },
+  {
+    "ruleId": "SUBJECT_VERB_AGREEMENT",
+    "offset": 1219,
+    "length": 6,
+    "excerpt": "claims",
+    "note": "Plural subject \"officials\" should pair with \"claim\"."
+  },
+  {
+    "ruleId": "SUBJECT_VERB_AGREEMENT",
+    "offset": 1317,
+    "length": 8,
+    "excerpt": "believes",
+    "note": "Plural subject \"experts\" should pair with \"believe\"."
+  },
+  {
+    "ruleId": "SUBJECT_VERB_AGREEMENT",
+    "offset": 1428,
+    "length": 5,
+    "excerpt": "faces",
+    "note": "Plural subject \"companies\" should pair with \"face\"."
+  },
+  {
+    "ruleId": "SUBJECT_VERB_AGREEMENT",
+    "offset": 1525,
+    "length": 3,
+    "excerpt": "was",
+    "note": "Plural subject \"projects\" should pair with \"were\"."
+  },
+  {
+    "ruleId": "SUBJECT_VERB_AGREEMENT",
+    "offset": 1725,
+    "length": 9,
+    "excerpt": "continues",
+    "note": "Plural subject \"cities\" should pair with \"continue\"."
+  },
+  {
+    "ruleId": "SUBJECT_VERB_AGREEMENT",
+    "offset": 1801,
+    "length": 6,
+    "excerpt": "argues",
+    "note": "Plural subject \"planners\" should pair with \"argue\"."
+  },
+  {
+    "ruleId": "SUBJECT_VERB_AGREEMENT",
+    "offset": 1998,
+    "length": 4,
+    "excerpt": "gets",
+    "note": "Plural subject \"buildings\" should pair with \"get\"."
+  }
+]

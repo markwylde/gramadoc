@@ -63,6 +63,14 @@ describe('clause metadata', () => {
     ])
   })
 
+  it('keeps subjectless sentence-leading infinitives on the shared infinitive path', () => {
+    const context = buildRuleCheckContext('To agree.')
+
+    expect(
+      context.tokens.map((token) => `${token.value}:${token.clausePart}`),
+    ).toEqual(['To:subject', 'agree:predicate'])
+  })
+
   it('splits coordinated clauses around a local predicate after a coordinator', () => {
     const context = buildRuleCheckContext(
       "I can't stand it and every update makes it worse.",

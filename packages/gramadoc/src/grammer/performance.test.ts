@@ -1,5 +1,6 @@
 import { performance } from 'node:perf_hooks'
 import { describe, expect, it } from 'vitest'
+import { analyzeTokenMorphology } from './morphology'
 import { analyzeHtml, analyzeText, buildRuleCheckContext } from './utils'
 
 const benchmarkText = `
@@ -20,6 +21,21 @@ const benchmarkHtml = `
   </ul>
 </article>
 `.trim()
+
+const morphologyBenchmarkTokens = [
+  'agreed',
+  'walked',
+  'studied',
+  'tries',
+  'written',
+  'went',
+  'seen',
+  'need',
+  'read',
+  'status',
+  'series',
+  'market',
+] as const
 
 function measureAverageDuration(action: () => void, iterations: number) {
   for (let index = 0; index < 5; index += 1) {
@@ -61,5 +77,17 @@ describe('performance guards', () => {
     )
 
     expect(averageDurationMs).toBeLessThan(30)
+  })
+
+  it('keeps the shared morphology hot path within a small batch budget', () => {
+    const averageDurationMs = measureAverageDuration(() => {
+      for (let repeat = 0; repeat < 150; repeat += 1) {
+        for (const token of morphologyBenchmarkTokens) {
+          analyzeTokenMorphology(token)
+        }
+      }
+    }, 20)
+
+    expect(averageDurationMs).toBeLessThan(25)
   })
 })

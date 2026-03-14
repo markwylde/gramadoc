@@ -189,7 +189,7 @@ function doesCueMatch(
     return false
   }
 
-  if (cue.lemmas?.length && !cue.lemmas.includes(token.lemma)) {
+  if (cue.lemmas?.length && !cue.lemmas.includes(token.morphology.lemma)) {
     return false
   }
 

@@ -150,6 +150,7 @@ describe('getRuleMatchMetrics', () => {
         metrics.annotation.lowConfidenceTokenCount,
     ).toBeGreaterThan(0)
     expect(metrics.annotation.fallbackGuessTokenCount).toBeGreaterThan(0)
+    expect(metrics.annotation).not.toHaveProperty('openClassUnknownTokenCount')
     expect(metrics.topFiringRuleIds.length).toBeGreaterThan(0)
     expect(metrics.overlappingMatchGroups.length).toBeGreaterThan(0)
   })

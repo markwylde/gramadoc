@@ -46,7 +46,6 @@ export type {
   GrammerRule,
   GrammerRuleExample,
   GrammerRuleExamples,
-  LemmaSource,
   MeasurementPreference,
   NativeLanguageProfile,
   ParagraphRange,
