@@ -797,8 +797,9 @@ export const GramadocInput = forwardRef<
       }
 
       const normalizedText = normalizePlainTextLineEndings(text)
-      const command =
-        normalizedText.includes('\n') ? 'insertHTML' : 'insertText'
+      const command = normalizedText.includes('\n')
+        ? 'insertHTML'
+        : 'insertText'
       const valueArg =
         command === 'insertHTML'
           ? plainTextToEditorHtml(normalizedText)

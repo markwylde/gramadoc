@@ -1,12 +1,12 @@
-import { describe, expect, it } from 'vitest'
 import { analyzeHtml } from '@markwylde/gramadoc'
+import { describe, expect, it } from 'vitest'
 import { plainTextToEditorHtml } from './GramadocInput'
 
 describe('plainTextToEditorHtml', () => {
   it('splits blank-line separated pasted text into paragraphs', () => {
-    expect(
-      plainTextToEditorHtml('First paragraph.\n\nSecond paragraph.'),
-    ).toBe('<p>First paragraph.</p><p>Second paragraph.</p>')
+    expect(plainTextToEditorHtml('First paragraph.\n\nSecond paragraph.')).toBe(
+      '<p>First paragraph.</p><p>Second paragraph.</p>',
+    )
   })
 
   it('preserves single line breaks within a paragraph', () => {
@@ -37,10 +37,12 @@ describe('plainTextToEditorHtml', () => {
     const brokenHtml = `<p>${sample.replace(/\n\n/gu, '<br><br>')}</p>`
     const fixedHtml = plainTextToEditorHtml(sample)
 
-    const brokenLongParagraphMatches = analyzeHtml(brokenHtml).warnings.matches
-      .filter((match) => match.rule.id === 'LONG_PARAGRAPH')
-    const fixedLongParagraphMatches = analyzeHtml(fixedHtml).warnings.matches
-      .filter((match) => match.rule.id === 'LONG_PARAGRAPH')
+    const brokenLongParagraphMatches = analyzeHtml(
+      brokenHtml,
+    ).warnings.matches.filter((match) => match.rule.id === 'LONG_PARAGRAPH')
+    const fixedLongParagraphMatches = analyzeHtml(
+      fixedHtml,
+    ).warnings.matches.filter((match) => match.rule.id === 'LONG_PARAGRAPH')
 
     expect(brokenLongParagraphMatches).toHaveLength(1)
     expect(fixedLongParagraphMatches).toHaveLength(0)
