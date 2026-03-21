@@ -81,7 +81,7 @@ describe('agreement differential corpus vs LanguageTool', () => {
       gramadocUnsafeRewriteRegressions,
     }).toEqual({
       languageToolFalsePositiveFindings: 1,
-      languageToolFalseNegativeFindings: 2,
+      languageToolFalseNegativeFindings: 3,
       gramadocFalsePositives: 0,
       gramadocFalseNegatives: 0,
       gramadocUnsafeRewriteRegressions: 0,
