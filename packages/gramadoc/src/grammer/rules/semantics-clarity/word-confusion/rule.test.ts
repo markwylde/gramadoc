@@ -304,7 +304,7 @@ describe('toTooTwoConfusionRule', () => {
     expect(
       runRule(
         toTooTwoConfusionRule,
-        "Greta Norris, the actor's granddaughter, paid tribute to him on social media, revealing that she, too, had been aware of her grandpa's status in the internet hall of fame.",
+        "Elena Alvarez, the singer's granddaughter, shared a tribute online, revealing that she, too, had grown up hearing stories about her grandmother's influence.",
       ),
     ).toEqual([])
   })
@@ -322,7 +322,7 @@ describe('toTooTwoConfusionRule', () => {
     expect(
       runRule(
         toTooTwoConfusionRule,
-        'You all knew Chuck Norris as the man that counted to infinity twice, the man who got bit by a cobra and the cobra died, she says.',
+        'People joked that Professor Vale had counted to infinity twice before breakfast, she said.',
       ),
     ).toEqual([])
   })

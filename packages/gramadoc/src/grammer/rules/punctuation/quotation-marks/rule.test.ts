@@ -32,7 +32,7 @@ describe('unmatchedDoubleQuotationMarkRule', () => {
     expect(
       runRule(
         unmatchedDoubleQuotationMarkRule,
-        '"They were everywhere," Goodwin said of the online gags. "Chuck Norris did everything better than everyone else."',
+        '"They covered every hallway," Patel said of the posters. "Nobody could miss them."',
       ),
     ).toEqual([])
   })
@@ -41,7 +41,7 @@ describe('unmatchedDoubleQuotationMarkRule', () => {
     expect(
       runRule(
         unmatchedDoubleQuotationMarkRule,
-        "Meme fan Steven Goodwin, 64, says the viral gags have been around for years - starting as jokes during the heyday of Norris' acting career.",
+        "Archivist Lena Ortiz, 64, says the stories had circulated for years - starting as jokes traded during the school's busiest festival season.",
       ),
     ).toEqual([])
   })

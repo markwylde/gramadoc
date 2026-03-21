@@ -98,7 +98,7 @@ describe('dash rules', () => {
     expect(
       runRule(
         hyphenUsedAsDashRule,
-        "Meme fan Steven Goodwin, 64, says the viral gags have been around for years – starting as jokes during the heyday of Norris' acting career.",
+        'Archivist Lena Ortiz, 64, says the stories had circulated for years – starting as jokes traded between theatre students.',
       ),
     ).toEqual([])
   })

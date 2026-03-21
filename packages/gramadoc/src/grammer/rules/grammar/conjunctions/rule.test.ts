@@ -65,10 +65,10 @@ describe('correlativeConjunctionRule', () => {
 })
 
 describe('sentenceStartConjunctionRule', () => {
-  it('keeps flagging longer BBC-style sentence-start "but" uses as advisory style guidance', () => {
+  it('keeps flagging longer sentence-start "but" uses as advisory style guidance', () => {
     const matches = runRule(
       sentenceStartConjunctionRule,
-      'Chuck Norris will always be remembered for his iconic film and television performances. But many young people only know the late actor for his starring role in thousands of memes.',
+      'Marta Alvarez will always be remembered for her landmark stage and radio performances. But many younger listeners know the veteran performer mainly through short clips shared online.',
     )
 
     expect(matches).toHaveLength(1)
@@ -104,10 +104,10 @@ describe('sentenceStartConjunctionRule', () => {
       runRule(
         sentenceStartConjunctionRule,
         [
-          'Where did the Chuck Norris memes come from?',
-          "Meme fan Steven Goodwin, 64, says the viral gags have been around for years - starting as jokes during the heyday of Norris' acting career.",
+          'Where did the campus legend start?',
+          'Archivist Lena Ortiz, 64, says the stories had circulated for years - starting as jokes traded between theatre students.',
           '',
-          'But the memes ensured he remained a potent cultural force long after the on-screen credits rolled.',
+          'But the stories kept her name in circulation long after the final performance ended.',
         ].join('\n'),
       ),
     ).toEqual([])

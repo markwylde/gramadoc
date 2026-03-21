@@ -37,12 +37,12 @@ describe('paragraphEndingPunctuationRule', () => {
   it('anchors the replacement span to the trailing year when a paragraph ends with digits', () => {
     const matches = runRule(
       paragraphEndingPunctuationRule,
-      'Watch: BBC asks Chuck Norris about being a "successful, really terrible" actor in 1985',
+      'Watch: archive interview with Marta Alvarez reflecting on her first tour in 1985',
     )
 
     expect(matches).toHaveLength(1)
     expect(matches[0]).toMatchObject({
-      offset: 82,
+      offset: 76,
       length: 4,
       replacements: [{ value: '1985.' }],
     })
@@ -137,12 +137,12 @@ describe('sentenceEndingPunctuationRule', () => {
   it('anchors sentence-ending fixes to a trailing year instead of the previous word', () => {
     const matches = runRule(
       sentenceEndingPunctuationRule,
-      'Watch: BBC asks Chuck Norris about being a "successful, really terrible" actor in 1985',
+      'Watch: archive interview with Marta Alvarez reflecting on her first tour in 1985',
     )
 
     expect(matches).toHaveLength(1)
     expect(matches[0]).toMatchObject({
-      offset: 82,
+      offset: 76,
       length: 4,
       replacements: [{ value: '1985.' }],
     })

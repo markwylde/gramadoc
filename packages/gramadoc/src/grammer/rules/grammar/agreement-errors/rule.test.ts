@@ -116,7 +116,7 @@ describe('subjectVerbAgreementRule', () => {
     expect(
       runRule(
         subjectVerbAgreementRule,
-        '"Chuck Norris can send texts on a rotary phone," reads a meme the page posted on Thursday.',
+        '"The toaster can juggle," reads the joke printed on the flyer.',
       ),
     ).toEqual([])
   })
@@ -190,7 +190,7 @@ describe('subjectVerbAgreementRule', () => {
     expect(
       runRule(
         subjectVerbAgreementRule,
-        'But many young people only know the late actor for his starring role in thousands of memes.',
+        'But many younger listeners know the veteran performer mainly through short clips shared online.',
       ),
     ).toEqual([])
   })

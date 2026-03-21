@@ -135,7 +135,7 @@ describe('commaSpliceRule', () => {
     expect(
       runRule(
         commaSpliceRule,
-        '"While our hearts are broken, we are deeply grateful for the life he lived," they wrote.',
+        '"Though our hearts are heavy, we remain grateful for every year we shared," the family wrote.',
       ),
     ).toEqual([])
   })
