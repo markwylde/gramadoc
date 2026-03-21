@@ -75,7 +75,10 @@ function isPossessiveApostrophe(
   const previous = text[index - 1]
   const next = text[index + 1]
 
-  return isWordCharacter(previous) && (next === undefined || /[\s.,!?;:)\]}]/u.test(next))
+  return (
+    isWordCharacter(previous) &&
+    (next === undefined || /[\s.,!?;:)\]}]/u.test(next))
+  )
 }
 
 export function analyzeQuotationMarks(text: string) {

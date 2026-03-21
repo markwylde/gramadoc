@@ -104,7 +104,7 @@ describe('sentenceStartConjunctionRule', () => {
       runRule(
         sentenceStartConjunctionRule,
         [
-          "Where did the Chuck Norris memes come from?",
+          'Where did the Chuck Norris memes come from?',
           "Meme fan Steven Goodwin, 64, says the viral gags have been around for years - starting as jokes during the heyday of Norris' acting career.",
           '',
           'But the memes ensured he remained a potent cultural force long after the on-screen credits rolled.',

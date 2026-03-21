@@ -149,7 +149,8 @@ function isLikelyReportingAttribution(tokens: Token[]) {
   }
 
   return (
-    hasPosHint(subjectTokens[0], 'pronoun') || hasPosHint(subjectTokens[0], 'noun')
+    hasPosHint(subjectTokens[0], 'pronoun') ||
+    hasPosHint(subjectTokens[0], 'noun')
   )
 }
 

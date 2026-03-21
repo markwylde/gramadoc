@@ -678,7 +678,8 @@ function resolveSubjectFromTokens(
   if (
     hasPosHint(head, 'adjective') &&
     !hasPosHint(head, 'noun') &&
-    (precedingPluralCue || (determiner && PLURAL_CUES.has(determiner.normalized)))
+    (precedingPluralCue ||
+      (determiner && PLURAL_CUES.has(determiner.normalized)))
   ) {
     return { token: head, number: 'plural' as const }
   }
@@ -1422,8 +1423,9 @@ function hasEarlierModal(
     (token) =>
       token.offset < verb.offset &&
       hasPosHint(token, 'modal') &&
-      pairs.some((pair) => token.offset > pair.open && token.offset < pair.close) ===
-        verbInsideQuotedText,
+      pairs.some(
+        (pair) => token.offset > pair.open && token.offset < pair.close,
+      ) === verbInsideQuotedText,
   )
 }
 
@@ -1551,7 +1553,8 @@ function hasPluralCueBeforeAdjectivalSubject(
 
   const hasPluralCue = clauseTokens.some(
     (token) =>
-      token.offset < subject.info.token.offset && PLURAL_CUES.has(token.normalized),
+      token.offset < subject.info.token.offset &&
+      PLURAL_CUES.has(token.normalized),
   )
 
   if (!hasPluralCue) {
