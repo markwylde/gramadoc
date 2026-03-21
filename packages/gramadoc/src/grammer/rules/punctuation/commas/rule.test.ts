@@ -95,6 +95,51 @@ describe('commaSpliceRule', () => {
     ).toEqual([])
   })
 
+  it('does not flag nonrestrictive relative clauses after a comma', () => {
+    expect(
+      runRule(
+        commaSpliceRule,
+        'UAE Minister of State Lana Nusseibeh condemned Iran, which has included strikes aimed at civilian infrastructure.',
+      ),
+    ).toEqual([])
+  })
+
+  it('does not flag subordinate clauses introduced after a comma', () => {
+    expect(
+      runRule(
+        commaSpliceRule,
+        'We postponed the launch, because the final checks were incomplete.',
+      ),
+    ).toEqual([])
+  })
+
+  it('does not flag short reporting attributions after a comma', () => {
+    expect(
+      runRule(
+        commaSpliceRule,
+        'The UAE did not want this war but would defend itself, she added, accusing Iran of attacking the peacemakers in the region.',
+      ),
+    ).toEqual([])
+  })
+
+  it('does not flag introductory participial or prepositional phrases before the main clause', () => {
+    expect(
+      runRule(
+        commaSpliceRule,
+        'In a statement posted online, his family said they wanted to keep the circumstances private.',
+      ),
+    ).toEqual([])
+  })
+
+  it('does not flag quotation attributions after a quoted sentence', () => {
+    expect(
+      runRule(
+        commaSpliceRule,
+        '"While our hearts are broken, we are deeply grateful for the life he lived," they wrote.',
+      ),
+    ).toEqual([])
+  })
+
   it('uses clause boundaries so introductory commas do not hide later comma splices', () => {
     const matches = runRule(
       commaSpliceRule,

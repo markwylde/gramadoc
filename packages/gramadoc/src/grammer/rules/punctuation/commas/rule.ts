@@ -10,6 +10,7 @@ import {
   getClauseSubjectTokens,
   getSentenceClauseTokens,
   isLikelyFiniteVerb,
+  isLikelyPastParticiple,
 } from '../../../rule-helpers.js'
 import type { GrammerRule, RuleCheckContext, Token } from '../../../types.js'
 import { createMatch } from '../../../utils.js'
@@ -33,6 +34,51 @@ const COORDINATING_CONJUNCTIONS = new Set([
   'so',
   'yet',
 ])
+const SUBORDINATE_CLAUSE_STARTERS = new Set([
+  'after',
+  'although',
+  'as',
+  'because',
+  'before',
+  'if',
+  'since',
+  'that',
+  'though',
+  'unless',
+  'until',
+  'when',
+  'whenever',
+  'where',
+  'whereas',
+  'wherever',
+  'whether',
+  'which',
+  'while',
+  'who',
+  'whom',
+  'whose',
+  'why',
+])
+const REPORTING_VERBS = new Set([
+  'add',
+  'added',
+  'announce',
+  'announced',
+  'ask',
+  'asked',
+  'explain',
+  'explained',
+  'note',
+  'noted',
+  'report',
+  'reported',
+  'say',
+  'said',
+  'tell',
+  'told',
+  'write',
+  'wrote',
+])
 
 function tokensAreWhitespaceSeparated(tokens: Token[]) {
   return tokens.every(
@@ -44,13 +90,29 @@ function tokensAreWhitespaceSeparated(tokens: Token[]) {
 function isLikelyIndependentClause(tokens: Token[]) {
   const subjectTokens = getClauseSubjectTokens(tokens)
   const predicateTokens = getClausePredicateTokens(tokens)
+  const firstToken = tokens[0]
   const firstSubject = subjectTokens[0]
 
   if (
+    !firstToken ||
     !firstSubject ||
     subjectTokens.length === 0 ||
     predicateTokens.length === 0 ||
-    firstSubject.normalized === 'there'
+    firstSubject.normalized === 'there' ||
+    SUBORDINATE_CLAUSE_STARTERS.has(firstToken.normalized) ||
+    SUBORDINATE_CLAUSE_STARTERS.has(firstSubject.normalized)
+  ) {
+    return false
+  }
+
+  if (
+    hasPosHint(firstToken, 'preposition') &&
+    predicateTokens.length > 0 &&
+    predicateTokens.every(
+      (token) =>
+        isLikelyPastParticiple(token) ||
+        (hasPosHint(token, 'adjective') && !isLikelyFiniteVerb(token)),
+    )
   ) {
     return false
   }
@@ -65,6 +127,29 @@ function isLikelyIndependentClause(tokens: Token[]) {
 
   return predicateTokens.some(
     (token) => isLikelyFiniteVerb(token) || hasPosHint(token, 'modal'),
+  )
+}
+
+function isLikelyReportingAttribution(tokens: Token[]) {
+  const subjectTokens = getClauseSubjectTokens(tokens)
+  const predicateTokens = getClausePredicateTokens(tokens)
+  const firstPredicate = predicateTokens[0]
+
+  if (
+    subjectTokens.length === 0 ||
+    predicateTokens.length === 0 ||
+    !firstPredicate ||
+    !REPORTING_VERBS.has(firstPredicate.normalized)
+  ) {
+    return false
+  }
+
+  if (subjectTokens.length > 3) {
+    return false
+  }
+
+  return (
+    hasPosHint(subjectTokens[0], 'pronoun') || hasPosHint(subjectTokens[0], 'noun')
   )
 }
 
@@ -154,6 +239,7 @@ export const commaSpliceRule: GrammerRule = {
             text.slice(leftToken.offset + leftToken.length, rightToken.offset),
           ) ||
           COORDINATING_CONJUNCTIONS.has(rightToken.normalized) ||
+          isLikelyReportingAttribution(rightClause) ||
           !isLikelyIndependentClause(leftClause) ||
           !isLikelyIndependentClause(rightClause)
         ) {

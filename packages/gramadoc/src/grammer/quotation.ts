@@ -63,6 +63,21 @@ function getAsciiQuoteKind(text: string, index: number, quote: '"' | "'") {
   return null
 }
 
+function isPossessiveApostrophe(
+  text: string,
+  index: number,
+  activeQuoteDepth: number,
+) {
+  if (activeQuoteDepth > 0) {
+    return false
+  }
+
+  const previous = text[index - 1]
+  const next = text[index + 1]
+
+  return isWordCharacter(previous) && (next === undefined || /[\s.,!?;:)\]}]/u.test(next))
+}
+
 export function analyzeQuotationMarks(text: string) {
   const pairs: QuotePair[] = []
   const unmatchedOpenings: Array<{ kind: QuoteKind; offset: number }> = []
@@ -101,6 +116,10 @@ export function analyzeQuotationMarks(text: string) {
     }
 
     if (character === '’') {
+      if (isPossessiveApostrophe(text, index, stacks.single.length)) {
+        continue
+      }
+
       if (
         isWordCharacter(text[index - 1]) &&
         isWordCharacter(text[index + 1])
@@ -124,6 +143,13 @@ export function analyzeQuotationMarks(text: string) {
       character === "'" &&
       isWordCharacter(text[index - 1]) &&
       isWordCharacter(text[index + 1])
+    ) {
+      continue
+    }
+
+    if (
+      character === "'" &&
+      isPossessiveApostrophe(text, index, stacks.single.length)
     ) {
       continue
     }

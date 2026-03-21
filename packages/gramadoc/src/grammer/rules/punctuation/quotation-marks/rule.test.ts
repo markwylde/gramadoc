@@ -27,6 +27,24 @@ describe('unmatchedDoubleQuotationMarkRule', () => {
       ),
     ).toEqual([])
   })
+
+  it('does not flag balanced quote attributions that reopen a second quotation later in the sentence', () => {
+    expect(
+      runRule(
+        unmatchedDoubleQuotationMarkRule,
+        '"They were everywhere," Goodwin said of the online gags. "Chuck Norris did everything better than everyone else."',
+      ),
+    ).toEqual([])
+  })
+
+  it('does not treat possessive apostrophes as unmatched quotation marks', () => {
+    expect(
+      runRule(
+        unmatchedDoubleQuotationMarkRule,
+        "Meme fan Steven Goodwin, 64, says the viral gags have been around for years - starting as jokes during the heyday of Norris' acting career.",
+      ),
+    ).toEqual([])
+  })
 })
 
 describe('spacingInsideQuotationMarksRule', () => {

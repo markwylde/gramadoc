@@ -111,6 +111,19 @@ describe('missingSpaceAfterPunctuationRule', () => {
       ),
     ).toEqual([])
   })
+
+  it('does not flag punctuation before a closing quote in dialogue and attribution', () => {
+    expect(
+      runRule(
+        missingSpaceAfterPunctuationRule,
+        [
+          '"While our hearts are broken, we are deeply grateful for the life he lived and for the unforgettable moments we were blessed to share with him," they wrote.',
+          '"They were everywhere," Goodwin said of the online gags.',
+          '"Chuck Norris can send texts on a rotary phone," reads a meme the page posted on Thursday.',
+        ].join(' '),
+      ),
+    ).toEqual([])
+  })
 })
 
 describe('missingSpaceAfterSentenceBoundaryRule', () => {

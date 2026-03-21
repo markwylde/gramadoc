@@ -10,6 +10,18 @@ function isLikelyPunctuationFollower(value: string | undefined) {
   return value !== undefined && /[\p{L}\p{M}\p{N}"'“‘([{]/u.test(value)
 }
 
+function isClosingQuoteAfterPunctuation(text: string, index: number) {
+  const quote = text[index + 1]
+
+  if (!quote || !`"'”’`.includes(quote)) {
+    return false
+  }
+
+  const afterQuote = text[index + 2]
+
+  return afterQuote === undefined || /[\s,.;:!?)\]}]/u.test(afterQuote)
+}
+
 function getParagraphSegments(text: string) {
   const segments: Array<{ start: number; end: number; text: string }> = []
   let paragraphStart = 0
@@ -192,6 +204,10 @@ export const missingSpaceAfterPunctuationRule: GrammerRule = {
       const nextCharacter = text[index + 1]
 
       if (!nextCharacter || /\s/.test(nextCharacter)) {
+        continue
+      }
+
+      if (isClosingQuoteAfterPunctuation(text, index)) {
         continue
       }
 
