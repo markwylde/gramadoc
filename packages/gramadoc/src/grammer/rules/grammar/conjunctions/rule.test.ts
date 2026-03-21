@@ -65,6 +65,20 @@ describe('correlativeConjunctionRule', () => {
 })
 
 describe('sentenceStartConjunctionRule', () => {
+  it('keeps flagging longer BBC-style sentence-start "but" uses as advisory style guidance', () => {
+    const matches = runRule(
+      sentenceStartConjunctionRule,
+      'Chuck Norris will always be remembered for his iconic film and television performances. But many young people only know the late actor for his starring role in thousands of memes.',
+    )
+
+    expect(matches).toHaveLength(1)
+    expect(matches[0]).toMatchObject({
+      message:
+        'Consider removing this sentence-start conjunction for a more direct sentence in formal prose.',
+      replacements: [{ value: '' }],
+    })
+  })
+
   it('flags longer sentence-start and/but uses as advisory style guidance', () => {
     const matches = runRule(
       sentenceStartConjunctionRule,
@@ -82,6 +96,20 @@ describe('sentenceStartConjunctionRule', () => {
   it('does not flag short fragments or the first sentence in a passage', () => {
     expect(
       runRule(sentenceStartConjunctionRule, 'But we stayed. And then we left.'),
+    ).toEqual([])
+  })
+
+  it('does not flag contrastive transitions that open a new paragraph', () => {
+    expect(
+      runRule(
+        sentenceStartConjunctionRule,
+        [
+          "Where did the Chuck Norris memes come from?",
+          "Meme fan Steven Goodwin, 64, says the viral gags have been around for years - starting as jokes during the heyday of Norris' acting career.",
+          '',
+          'But the memes ensured he remained a potent cultural force long after the on-screen credits rolled.',
+        ].join('\n'),
+      ),
     ).toEqual([])
   })
 

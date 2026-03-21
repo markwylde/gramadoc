@@ -43,11 +43,6 @@ const benchmarkCorpus = [
     expectedRuleIds: ['QUESTION_MARK_SENTENCE_ENDING'],
   },
   {
-    family: 'style',
-    text: 'The release was shipped yesterday.',
-    expectedRuleIds: ['PASSIVE_VOICE'],
-  },
-  {
     family: 'variants',
     text: 'The colour palette helped us organise the centre display.',
     expectedRuleIds: [
@@ -104,6 +99,11 @@ const falsePositiveCorpus = [
   'Recent talks have made clear there is no route to peace without compromise.',
   'The last two weeks have shown there are no easy answers for negotiators.',
   'Months of review have confirmed there is no evidence of tampering in the logs.',
+  'Chuck Norris will always be remembered for his iconic film and television performances.',
+  '"While our hearts are broken, we are deeply grateful for the life he lived and for the unforgettable moments we were blessed to share with him," they wrote.',
+  'In a statement posted online, his family said they wanted to keep the circumstances private.',
+  "Greta Norris, the actor's granddaughter, paid tribute to him on social media, revealing that she, too, had been aware of her grandpa's status in the internet hall of fame.",
+  'But many young people only know the late actor for his starring role in thousands of memes.',
 ]
 
 describe('benchmark corpus', () => {

@@ -299,6 +299,33 @@ describe('toTooTwoConfusionRule', () => {
       ),
     ).toEqual([])
   })
+
+  it('stays quiet for parenthetical "too" set off by commas', () => {
+    expect(
+      runRule(
+        toTooTwoConfusionRule,
+        "Greta Norris, the actor's granddaughter, paid tribute to him on social media, revealing that she, too, had been aware of her grandpa's status in the internet hall of fame.",
+      ),
+    ).toEqual([])
+  })
+
+  it('stays quiet for short additive parentheticals in ordinary prose', () => {
+    expect(
+      runRule(
+        toTooTwoConfusionRule,
+        'I, too, was surprised by the reaction. She, too, wanted to help.',
+      ),
+    ).toEqual([])
+  })
+
+  it('stays quiet for idiomatic prepositional phrases like "counted to infinity"', () => {
+    expect(
+      runRule(
+        toTooTwoConfusionRule,
+        'You all knew Chuck Norris as the man that counted to infinity twice, the man who got bit by a cobra and the cobra died, she says.',
+      ),
+    ).toEqual([])
+  })
 })
 
 describe('confusion ranking evidence', () => {

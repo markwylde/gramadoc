@@ -1453,6 +1453,12 @@ export const homophoneConfusionSets: ContextualConfusionSet[] = [
     forms: ['to', 'too', 'two'],
     minimumAdvantage: 2,
     minimumScore: 2,
+    antiPatterns: [
+      {
+        literals: [['count', 'counted'], ['to'], ['infinity']],
+        focusIndex: 1,
+      },
+    ],
     examples: {
       good: [
         { text: 'We have too many notes.' },
