@@ -516,17 +516,17 @@
 
 .document-page {
   width: min(100%, 920px);
-  min-height: 1100px;
+  height: fit-content;
+  min-height: 1122px;
   padding: 88px 92px;
   background: var(--bg-page);
   color: var(--text-on-page);
   border: 1px solid color-mix(in srgb, var(--border-color) 50%, transparent);
   box-shadow: var(--shadow-page);
-  zoom: var(--page-zoom);
 }
 
 .gramadoc-editor-container {
-  height: 100%;
+  width: 100%;
 }
 
 .gramadoc-editor-surface {
@@ -544,6 +544,14 @@
 .gramadoc-editor-surface:focus {
   box-shadow: none;
   outline: none;
+}
+
+.gramadoc-editor-surface > :first-child {
+  margin-top: 0;
+}
+
+.gramadoc-editor-surface > :last-child {
+  margin-bottom: 0;
 }
 
 .status-bar {
