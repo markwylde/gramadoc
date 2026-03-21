@@ -487,8 +487,7 @@ function isLikelySingularProperName(tokens: Token[]) {
 function isLikelySingularTitledWork(tokens: Token[]) {
   const nameParts = getCapitalizedNameParts(tokens)
   const nonOfPreposition = tokens.find(
-    (token) =>
-      hasPosHint(token, 'preposition') && token.normalized !== 'of',
+    (token) => hasPosHint(token, 'preposition') && token.normalized !== 'of',
   )
 
   if (
@@ -1866,7 +1865,12 @@ function resolveBareVerbSubject(
 
   if (clauseSubject && localSubject) {
     if (
-      shouldPreferLocalSubject(tokensInClause, clauseSubject, localSubject, verb)
+      shouldPreferLocalSubject(
+        tokensInClause,
+        clauseSubject,
+        localSubject,
+        verb,
+      )
     ) {
       return {
         info: localSubject.info,
