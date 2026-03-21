@@ -79,6 +79,7 @@ const PREPOSITION_BREAKS = new Set([
 const SUBJECT_HEAD_PREPOSITIONS = new Set([
   'about',
   'across',
+  'at',
   'around',
   'between',
   'by',
@@ -485,10 +486,14 @@ function isLikelySingularProperName(tokens: Token[]) {
 
 function isLikelySingularTitledWork(tokens: Token[]) {
   const nameParts = getCapitalizedNameParts(tokens)
+  const nonOfPreposition = tokens.find(
+    (token) => hasPosHint(token, 'preposition') && token.normalized !== 'of',
+  )
 
   if (
     nameParts.length < 2 ||
-    !tokens.some((token) => token.normalized === 'of')
+    !tokens.some((token) => token.normalized === 'of') ||
+    nonOfPreposition
   ) {
     return false
   }
@@ -1855,6 +1860,29 @@ function resolveBareVerbSubject(
       info: sentenceFallbackSubject.info,
       tokens: sentenceFallbackSubject.tokens,
       source: 'sentence-fallback' as const,
+    }
+  }
+
+  if (clauseSubject && localSubject) {
+    if (
+      shouldPreferLocalSubject(
+        tokensInClause,
+        clauseSubject,
+        localSubject,
+        verb,
+      )
+    ) {
+      return {
+        info: localSubject.info,
+        tokens: localSubject.tokens,
+        source: 'local' as const,
+      }
+    }
+
+    return {
+      info: clauseSubject.info,
+      tokens: clauseSubject.tokens,
+      source: 'clause' as const,
     }
   }
 

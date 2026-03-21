@@ -299,7 +299,7 @@ describe('subjectVerbAgreementRule', () => {
       replacements: [{ value: 'makes' }],
     })
     expect(mismatchMatches[0]?.diagnostics?.evidence).toContain(
-      'subject:local:one:singular',
+      'subject:clause:one:singular',
     )
 
     expect(
@@ -428,6 +428,52 @@ describe('subjectVerbAgreementRule', () => {
         'A series of updates is live. The series of tests is complete. The Chronicles of Narnia is on the shelf.',
       ),
     ).toEqual([])
+  })
+
+  it('does not let reporting verbs latch onto proper-name objects inside prepositional subject phrases', () => {
+    expect(
+      runRule(
+        subjectVerbAgreementRule,
+        [
+          'If you missed the display on Friday night, forecasters at the Met Office Space Weather Prediction Centre say it could be seen again on Saturday night.',
+          'Forecasters at the Met Office Space Weather Prediction Centre say it could be seen again on Saturday night.',
+          'Analysts at the Bank of England Research Department say inflation is easing.',
+          'Researchers at the University of California Space Sciences Laboratory say the signal is genuine.',
+          'Editors at the New York Times Opinion desk say the piece needs another pass.',
+        ].join(' '),
+      ),
+    ).toEqual([])
+  })
+
+  it('still flags reporting-verb mismatches when the real plural subject heads those prepositional phrases', () => {
+    const matches = runRule(
+      subjectVerbAgreementRule,
+      [
+        'If you missed the display on Friday night, forecasters at the Met Office Space Weather Prediction Centre says it could be seen again on Saturday night.',
+        'Forecasters at the Met Office Space Weather Prediction Centre says it could be seen again on Saturday night.',
+        'Analysts at the Bank of England Research Department says inflation is easing.',
+        'Researchers at the University of California Space Sciences Laboratory says the signal is genuine.',
+        'Editors at the New York Times Opinion desk says the piece needs another pass.',
+      ].join(' '),
+    )
+
+    expect(matches).toHaveLength(4)
+    expect(matches[0]).toMatchObject({
+      message: 'Use "say" with "Forecasters".',
+      replacements: [{ value: 'say' }],
+    })
+    expect(matches[1]).toMatchObject({
+      message: 'Use "say" with "Analysts".',
+      replacements: [{ value: 'say' }],
+    })
+    expect(matches[2]).toMatchObject({
+      message: 'Use "say" with "Researchers".',
+      replacements: [{ value: 'say' }],
+    })
+    expect(matches[3]).toMatchObject({
+      message: 'Use "say" with "Editors".',
+      replacements: [{ value: 'say' }],
+    })
   })
 
   it('still flags clear plural noun mismatches with was/were', () => {

@@ -5,7 +5,7 @@ export interface AgreementLanguageToolFixture {
   forbiddenRuleIds?: string[]
   unsafeRewrite?: boolean
   languageTool: {
-    observedOn: '2026-03-11'
+    observedOn: `${number}-${number}-${number}`
     flagged: boolean
     ruleIds: string[]
   }
@@ -49,6 +49,19 @@ export const languageToolAgreementFalsePositiveFixtures: AgreementLanguageToolFi
         ruleIds: ['AGREEMENT_SENT_START'],
       },
     },
+    {
+      family:
+        'plural reporting subjects stay quiet when followed by proper-name objects in prepositional phrases',
+      text: 'Forecasters at the Met Office Space Weather Prediction Centre say it could be seen again on Saturday night.',
+      expectedRuleIds: [],
+      forbiddenRuleIds: ['SUBJECT_VERB_AGREEMENT'],
+      unsafeRewrite: true,
+      languageTool: {
+        observedOn: '2026-03-21',
+        flagged: false,
+        ruleIds: [],
+      },
+    },
   ]
 
 export const languageToolAgreementFalseNegativeFixtures: AgreementLanguageToolFixture[] =
@@ -90,6 +103,17 @@ export const languageToolAgreementFalseNegativeFixtures: AgreementLanguageToolFi
       expectedRuleIds: ['SUBJECT_VERB_AGREEMENT'],
       languageTool: {
         observedOn: '2026-03-11',
+        flagged: false,
+        ruleIds: [],
+      },
+    },
+    {
+      family:
+        'plural reporting subjects still detect mismatches before proper-name objects in prepositional phrases',
+      text: 'Forecasters at the Met Office Space Weather Prediction Centre says it could be seen again on Saturday night.',
+      expectedRuleIds: ['SUBJECT_VERB_AGREEMENT'],
+      languageTool: {
+        observedOn: '2026-03-21',
         flagged: false,
         ruleIds: [],
       },
