@@ -93,6 +93,15 @@ describe('dash rules', () => {
       matches.filter((match) => match.rule.id === hyphenUsedAsDashRule.id),
     ).toEqual([])
   })
+
+  it('does not flag spaced en dashes that are already valid parenthetical breaks', () => {
+    expect(
+      runRule(
+        hyphenUsedAsDashRule,
+        'Archivist Lena Ortiz, 64, says the stories had circulated for years – starting as jokes traded between theatre students.',
+      ),
+    ).toEqual([])
+  })
 })
 
 describe('ellipsisNormalizationRule', () => {

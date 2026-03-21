@@ -196,6 +196,59 @@ function getLastToken(tokens: Token[]) {
   return tokens.at(-1) ?? null
 }
 
+function getTrailingWordLikeSpan(text: string, startOffset: number) {
+  let end = text.length
+
+  while (end > 0 && /\s/u.test(text[end - 1] ?? '')) {
+    end -= 1
+  }
+
+  while (
+    end > 0 &&
+    CLOSING_PUNCTUATION_CHARACTERS.includes(text[end - 1] ?? '')
+  ) {
+    end -= 1
+  }
+
+  if (end === 0) {
+    return null
+  }
+
+  let start = end
+
+  while (start > 0) {
+    const character = text[start - 1] ?? ''
+    const previousCharacter = text[start - 2] ?? ''
+    const nextCharacter = text[start] ?? ''
+
+    if (/[\p{L}\p{M}\p{N}]/u.test(character)) {
+      start -= 1
+      continue
+    }
+
+    if (
+      ["'", '’', '-'].includes(character) &&
+      /[\p{L}\p{M}\p{N}]/u.test(previousCharacter) &&
+      /[\p{L}\p{M}\p{N}]/u.test(nextCharacter)
+    ) {
+      start -= 1
+      continue
+    }
+
+    break
+  }
+
+  if (start === end) {
+    return null
+  }
+
+  return {
+    offset: startOffset + start,
+    length: end - start,
+    value: text.slice(start, end),
+  }
+}
+
 function getQuestionWords(tokens: Token[]) {
   return tokens.map((token) => token.normalized)
 }
@@ -388,19 +441,31 @@ export const sentenceEndingPunctuationRule: GrammerRule = {
       }
 
       const lineTokens = getRangeTokens(context, range)
-      const lastToken = getLastToken(lineTokens)
+      const trailingSpan =
+        getTrailingWordLikeSpan(range.text, range.start) ??
+        ((): { offset: number; length: number; value: string } | null => {
+          const lastToken = getLastToken(lineTokens)
 
-      if (!lastToken) {
+          return lastToken
+            ? {
+                offset: lastToken.offset,
+                length: lastToken.length,
+                value: lastToken.value,
+              }
+            : null
+        })()
+
+      if (!trailingSpan) {
         continue
       }
 
       matches.push(
         createMatch({
           text: context.text,
-          offset: lastToken.offset,
-          length: lastToken.length,
+          offset: trailingSpan.offset,
+          length: trailingSpan.length,
           message: 'Sentence should end with punctuation.',
-          replacements: [`${lastToken.value}.`],
+          replacements: [`${trailingSpan.value}.`],
           rule: sentenceEndingPunctuationRule,
         }),
       )
@@ -617,19 +682,31 @@ export const paragraphEndingPunctuationRule: GrammerRule = {
           paragraphRange.start,
           paragraphRange.end,
         )
-      const lastToken = getLastToken(paragraphTokens)
+      const trailingSpan =
+        getTrailingWordLikeSpan(trimmedText, paragraphRange.start) ??
+        ((): { offset: number; length: number; value: string } | null => {
+          const lastToken = getLastToken(paragraphTokens)
 
-      if (!lastToken) {
+          return lastToken
+            ? {
+                offset: lastToken.offset,
+                length: lastToken.length,
+                value: lastToken.value,
+              }
+            : null
+        })()
+
+      if (!trailingSpan) {
         continue
       }
 
       matches.push(
         createMatch({
           text: context.text,
-          offset: lastToken.offset,
-          length: lastToken.length,
+          offset: trailingSpan.offset,
+          length: trailingSpan.length,
           message: 'Paragraphs should end with terminal punctuation.',
-          replacements: [`${lastToken.value}.`],
+          replacements: [`${trailingSpan.value}.`],
           rule: paragraphEndingPunctuationRule,
         }),
       )

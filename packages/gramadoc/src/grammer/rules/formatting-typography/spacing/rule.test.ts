@@ -111,6 +111,19 @@ describe('missingSpaceAfterPunctuationRule', () => {
       ),
     ).toEqual([])
   })
+
+  it('does not flag punctuation before a closing quote in dialogue and attribution', () => {
+    expect(
+      runRule(
+        missingSpaceAfterPunctuationRule,
+        [
+          '"Though our hearts are heavy, we remain grateful for the years we shared and for every generous memory she left us," the family wrote.',
+          '"They filled every hallway," Patel said of the campaign posters.',
+          '"The toaster can file taxes," reads the joke printed on the flyer.',
+        ].join(' '),
+      ),
+    ).toEqual([])
+  })
 })
 
 describe('missingSpaceAfterSentenceBoundaryRule', () => {

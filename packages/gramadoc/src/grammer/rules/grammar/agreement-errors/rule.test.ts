@@ -112,6 +112,15 @@ describe('subjectVerbAgreementRule', () => {
     ).toEqual([])
   })
 
+  it('does not let modal verbs inside quotations force a reporting verb into base form', () => {
+    expect(
+      runRule(
+        subjectVerbAgreementRule,
+        '"The toaster can juggle," reads the joke printed on the flyer.',
+      ),
+    ).toEqual([])
+  })
+
   it('keeps embedded existential there-clauses quiet across varied earlier plural contexts', () => {
     const texts = [
       'Recent talks have made clear there is no route to peace without compromise.',
@@ -175,6 +184,24 @@ describe('subjectVerbAgreementRule', () => {
       message: 'Use "depend" with "teams".',
       replacements: [{ value: 'depend' }],
     })
+  })
+
+  it('does not treat adjectival modifiers inside plural subject phrases as the subject head', () => {
+    expect(
+      runRule(
+        subjectVerbAgreementRule,
+        'But many younger listeners know the veteran performer mainly through short clips shared online.',
+      ),
+    ).toEqual([])
+  })
+
+  it('keeps plural noun heads quiet when they follow age or descriptive modifiers', () => {
+    expect(
+      runRule(
+        subjectVerbAgreementRule,
+        'Older voters often know the policy history, and younger fans still watch the reruns.',
+      ),
+    ).toEqual([])
   })
 
   it('recovers agreement mismatches across longer subject phrases and embedded clauses', () => {

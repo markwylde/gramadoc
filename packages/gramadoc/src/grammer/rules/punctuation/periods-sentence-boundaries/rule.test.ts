@@ -33,6 +33,20 @@ describe('paragraphEndingPunctuationRule', () => {
 
     expect(matches).toEqual([])
   })
+
+  it('anchors the replacement span to the trailing year when a paragraph ends with digits', () => {
+    const matches = runRule(
+      paragraphEndingPunctuationRule,
+      'Watch: archive interview with Marta Alvarez reflecting on her first tour in 1985',
+    )
+
+    expect(matches).toHaveLength(1)
+    expect(matches[0]).toMatchObject({
+      offset: 76,
+      length: 4,
+      replacements: [{ value: '1985.' }],
+    })
+  })
 })
 
 describe('sentenceEndingPunctuationRule', () => {
@@ -117,6 +131,20 @@ describe('sentenceEndingPunctuationRule', () => {
     expect(matches[0]).toMatchObject({
       message: 'Sentence should end with punctuation.',
       replacements: [{ value: 'naïve.' }],
+    })
+  })
+
+  it('anchors sentence-ending fixes to a trailing year instead of the previous word', () => {
+    const matches = runRule(
+      sentenceEndingPunctuationRule,
+      'Watch: archive interview with Marta Alvarez reflecting on her first tour in 1985',
+    )
+
+    expect(matches).toHaveLength(1)
+    expect(matches[0]).toMatchObject({
+      offset: 76,
+      length: 4,
+      replacements: [{ value: '1985.' }],
     })
   })
 

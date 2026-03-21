@@ -65,6 +65,20 @@ describe('correlativeConjunctionRule', () => {
 })
 
 describe('sentenceStartConjunctionRule', () => {
+  it('keeps flagging longer sentence-start "but" uses as advisory style guidance', () => {
+    const matches = runRule(
+      sentenceStartConjunctionRule,
+      'Marta Alvarez will always be remembered for her landmark stage and radio performances. But many younger listeners know the veteran performer mainly through short clips shared online.',
+    )
+
+    expect(matches).toHaveLength(1)
+    expect(matches[0]).toMatchObject({
+      message:
+        'Consider removing this sentence-start conjunction for a more direct sentence in formal prose.',
+      replacements: [{ value: '' }],
+    })
+  })
+
   it('flags longer sentence-start and/but uses as advisory style guidance', () => {
     const matches = runRule(
       sentenceStartConjunctionRule,
@@ -82,6 +96,20 @@ describe('sentenceStartConjunctionRule', () => {
   it('does not flag short fragments or the first sentence in a passage', () => {
     expect(
       runRule(sentenceStartConjunctionRule, 'But we stayed. And then we left.'),
+    ).toEqual([])
+  })
+
+  it('does not flag contrastive transitions that open a new paragraph', () => {
+    expect(
+      runRule(
+        sentenceStartConjunctionRule,
+        [
+          'Where did the campus legend start?',
+          'Archivist Lena Ortiz, 64, says the stories had circulated for years - starting as jokes traded between theatre students.',
+          '',
+          'But the stories kept her name in circulation long after the final performance ended.',
+        ].join('\n'),
+      ),
     ).toEqual([])
   })
 

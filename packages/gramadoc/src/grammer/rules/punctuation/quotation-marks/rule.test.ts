@@ -27,6 +27,24 @@ describe('unmatchedDoubleQuotationMarkRule', () => {
       ),
     ).toEqual([])
   })
+
+  it('does not flag balanced quote attributions that reopen a second quotation later in the sentence', () => {
+    expect(
+      runRule(
+        unmatchedDoubleQuotationMarkRule,
+        '"They covered every hallway," Patel said of the posters. "Nobody could miss them."',
+      ),
+    ).toEqual([])
+  })
+
+  it('does not treat possessive apostrophes as unmatched quotation marks', () => {
+    expect(
+      runRule(
+        unmatchedDoubleQuotationMarkRule,
+        "Archivist Lena Ortiz, 64, says the stories had circulated for years - starting as jokes traded during the school's busiest festival season.",
+      ),
+    ).toEqual([])
+  })
 })
 
 describe('spacingInsideQuotationMarksRule', () => {

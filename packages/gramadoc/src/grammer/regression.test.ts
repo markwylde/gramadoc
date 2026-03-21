@@ -43,11 +43,6 @@ const benchmarkCorpus = [
     expectedRuleIds: ['QUESTION_MARK_SENTENCE_ENDING'],
   },
   {
-    family: 'style',
-    text: 'The release was shipped yesterday.',
-    expectedRuleIds: ['PASSIVE_VOICE'],
-  },
-  {
     family: 'variants',
     text: 'The colour palette helped us organise the centre display.',
     expectedRuleIds: [
@@ -104,6 +99,11 @@ const falsePositiveCorpus = [
   'Recent talks have made clear there is no route to peace without compromise.',
   'The last two weeks have shown there are no easy answers for negotiators.',
   'Months of review have confirmed there is no evidence of tampering in the logs.',
+  'Marta Alvarez will always be remembered for her landmark stage and radio performances.',
+  '"Though our hearts are heavy, we remain grateful for the years we shared and for every generous memory she left us," the family wrote.',
+  'In an online statement, the family said they wanted to keep the medical details private.',
+  "Elena Alvarez, the singer's granddaughter, shared a tribute online, adding that she, too, had grown up hearing stories about her grandmother's influence.",
+  'But many younger listeners know the veteran performer mainly through short clips shared online.',
 ]
 
 describe('benchmark corpus', () => {

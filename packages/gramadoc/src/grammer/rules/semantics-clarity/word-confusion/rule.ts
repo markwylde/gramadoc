@@ -57,6 +57,10 @@ function shouldSkipContextualConfusion(
   next?: Token,
 ) {
   return (
+    (confusionSet.id === 'TO_TOO_TWO' &&
+      token.normalized === 'too' &&
+      /,\s*$/u.test(token.leadingText) &&
+      /^\s*,/u.test(token.trailingText)) ||
     (confusionSet.id === 'AFFECT_EFFECT' &&
       token.normalized === 'affect' &&
       ['have', 'has', 'had', 'take', 'takes', 'took'].includes(

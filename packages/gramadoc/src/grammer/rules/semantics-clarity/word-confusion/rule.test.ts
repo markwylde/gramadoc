@@ -299,6 +299,33 @@ describe('toTooTwoConfusionRule', () => {
       ),
     ).toEqual([])
   })
+
+  it('stays quiet for parenthetical "too" set off by commas', () => {
+    expect(
+      runRule(
+        toTooTwoConfusionRule,
+        "Elena Alvarez, the singer's granddaughter, shared a tribute online, revealing that she, too, had grown up hearing stories about her grandmother's influence.",
+      ),
+    ).toEqual([])
+  })
+
+  it('stays quiet for short additive parentheticals in ordinary prose', () => {
+    expect(
+      runRule(
+        toTooTwoConfusionRule,
+        'I, too, was surprised by the reaction. She, too, wanted to help.',
+      ),
+    ).toEqual([])
+  })
+
+  it('stays quiet for idiomatic prepositional phrases like "counted to infinity"', () => {
+    expect(
+      runRule(
+        toTooTwoConfusionRule,
+        'People joked that Professor Vale had counted to infinity twice before breakfast, she said.',
+      ),
+    ).toEqual([])
+  })
 })
 
 describe('confusion ranking evidence', () => {

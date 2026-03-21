@@ -214,6 +214,10 @@ export const sentenceStartConjunctionRule: GrammerRule = {
         continue
       }
 
+      if (/\n\s*\n/u.test(token.leadingText)) {
+        continue
+      }
+
       matches.push(
         createMatch({
           text,

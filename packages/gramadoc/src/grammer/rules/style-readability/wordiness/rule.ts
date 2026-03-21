@@ -1009,7 +1009,6 @@ export const wordinessRules = [
   houseStyleWordingRule,
   longSentenceRule,
   longParagraphRule,
-  passiveVoiceRule,
   sentenceStartNumberRule,
   sentenceInitialReadabilityRule,
   sentenceFinalReadabilityRule,

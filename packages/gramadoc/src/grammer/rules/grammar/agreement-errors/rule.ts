@@ -4,6 +4,7 @@ import {
   toPluralBaseVerb,
   toThirdPersonSingularVerb,
 } from '../../../morphology.js'
+import { analyzeQuotationMarks } from '../../../quotation.js'
 import {
   getClauseSubjectTokens,
   getSentenceTokens,
@@ -597,6 +598,9 @@ function resolveSubjectFromTokens(
     ? subjectSlice.findIndex((token) => token.index === head.index)
     : -1
   const previousHead = headIndex > 0 ? subjectSlice[headIndex - 1] : undefined
+  const precedingPluralCue = subjectSlice
+    .slice(0, Math.max(headIndex, 0))
+    .find((token) => PLURAL_CUES.has(token.normalized))
 
   if (standaloneProperName && !nounLikeToken) {
     return {
@@ -669,6 +673,15 @@ function resolveSubjectFromTokens(
     determiner?.normalized === 'every'
   ) {
     return { token: head, number: 'singular' as const }
+  }
+
+  if (
+    hasPosHint(head, 'adjective') &&
+    !hasPosHint(head, 'noun') &&
+    (precedingPluralCue ||
+      (determiner && PLURAL_CUES.has(determiner.normalized)))
+  ) {
+    return { token: head, number: 'plural' as const }
   }
 
   return {
@@ -1265,6 +1278,14 @@ function hasNominalSubjectAnchor(subject: SubjectCandidate) {
   )
 }
 
+function isAdjectivalSubjectHead(subject: SubjectCandidate) {
+  return (
+    hasPosHint(subject.info.token, 'adjective') &&
+    !hasPosHint(subject.info.token, 'noun') &&
+    !hasPosHint(subject.info.token, 'pronoun')
+  )
+}
+
 function isExpandedNominalLocalSubject(
   clauseSubject: SubjectCandidate,
   localSubject: SubjectCandidate,
@@ -1388,12 +1409,23 @@ function hasEmbeddedClauseMarkerBeforeVerb(
 }
 
 function hasEarlierModal(
+  text: string,
   tokensInClause: Token[],
   _localSubjectTokens: Token[],
   verb: Token,
 ) {
+  const { pairs } = analyzeQuotationMarks(text)
+  const verbInsideQuotedText = pairs.some(
+    (pair) => verb.offset > pair.open && verb.offset < pair.close,
+  )
+
   return tokensInClause.some(
-    (token) => token.offset < verb.offset && hasPosHint(token, 'modal'),
+    (token) =>
+      token.offset < verb.offset &&
+      hasPosHint(token, 'modal') &&
+      pairs.some(
+        (pair) => token.offset > pair.open && token.offset < pair.close,
+      ) === verbInsideQuotedText,
   )
 }
 
@@ -1502,6 +1534,38 @@ function shouldSkipLexicalAgreementInInvertedQuestion(
       token.offset < verb.offset &&
       INVERTED_AUXILIARIES.has(token.normalized) &&
       (hasPosHint(token, 'auxiliary') || hasPosHint(token, 'verb')),
+  )
+}
+
+function hasPluralCueBeforeAdjectivalSubject(
+  clauseTokens: Token[],
+  subject: ResolvedSubject,
+  verb: Token,
+) {
+  if (
+    hasPosHint(subject.info.token, 'pronoun') ||
+    hasPosHint(subject.info.token, 'determiner') ||
+    SINGULAR_SUBJECTS.has(subject.info.token.normalized) ||
+    PLURAL_SUBJECTS.has(subject.info.token.normalized)
+  ) {
+    return false
+  }
+
+  const hasPluralCue = clauseTokens.some(
+    (token) =>
+      token.offset < subject.info.token.offset &&
+      PLURAL_CUES.has(token.normalized),
+  )
+
+  if (!hasPluralCue) {
+    return false
+  }
+
+  return !clauseTokens.some(
+    (token) =>
+      token.offset > subject.info.token.offset &&
+      token.offset < verb.offset &&
+      token.normalized === 'of',
   )
 }
 
@@ -1627,6 +1691,13 @@ function shouldPreferLocalSubject(
     !hasStrongSubjectEvidence(localSubject.info, localSubject.tokens)
   ) {
     return false
+  }
+
+  if (
+    isAdjectivalSubjectHead(clauseSubject) &&
+    hasNominalSubjectAnchor(localSubject)
+  ) {
+    return true
   }
 
   if (
@@ -1998,7 +2069,7 @@ export const subjectVerbAgreementRule: GrammerRule = {
       }
 
       if (
-        hasEarlierModal(clauseTokens, localSubjectTokens, verb) &&
+        hasEarlierModal(text, clauseTokens, localSubjectTokens, verb) &&
         hasRecoverablePredicateSignal(verb, following, tokens[index - 1]) &&
         isLikelyThirdPersonSingularVerb(verb, following)
       ) {
@@ -2098,12 +2169,22 @@ export const subjectVerbAgreementRule: GrammerRule = {
           bareVerbResolvedSubject.tokens,
           bareVerbResolvedSubject.info.token,
         ) &&
+        !hasPluralCueBeforeAdjectivalSubject(
+          clauseTokens,
+          bareVerbResolvedSubject,
+          verb,
+        ) &&
         following &&
         /^\s+$/u.test(verb.trailingText) &&
         !/[;:]\s*$/u.test(verb.leadingText) &&
         !(
           QUESTION_LEADS.has(clauseTokens[0]?.normalized ?? '') &&
-          hasEarlierModal(clauseTokens, bareVerbResolvedSubject.tokens, verb)
+          hasEarlierModal(
+            text,
+            clauseTokens,
+            bareVerbResolvedSubject.tokens,
+            verb,
+          )
         ) &&
         !hasLeadingAuxiliaryOrModal(
           clauseTokens,
